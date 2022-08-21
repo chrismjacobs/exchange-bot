@@ -2,8 +2,8 @@
 
 keys = {
     1 : {
-        'api_key' : "mHKzPd7z8zfnrCfJrU",
-        'api_secret' : "YFY6xdAas2H2gYN3HvnAx3zEBt8Tm29gviIJ"
+        'api_key' : "OVXHfMjNRUgv3r0HXi",
+        'api_secret' : "Km9BtzFV4IB6zXaZHnMLLXc79XjbQKzjTI6Z"
     },
     2 : {
         'api_key' : '3Mi3bMi6Nbcu7C5jTu',

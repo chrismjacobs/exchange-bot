@@ -1,7 +1,7 @@
 import bybit
 from config import keys, coinlist
 from datetime import datetime, timedelta
-from checklist import volume
+
 
 print(keys[1])
 client = bybit.bybit(test=False, api_key=keys[1]['api_key'], api_secret=keys[1]['api_secret'])

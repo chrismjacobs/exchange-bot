@@ -17,22 +17,41 @@ profit = 4050
 leverage = 2
 '''
 
-sideBS = "Buy"
-account = 2
-coin = 'BTC'
-top = 58500 # first entry
-bottom = 57500 #last entry
-stop = 57000
-profit = 64000
+# sideBS = "Buy"
+# account = 2
+# coin = 'BTC'
+# top = 58500 # first entry
+# bottom = 57500 #last entry
+# stop = 57000
+# profit = 64000
 
-leverage = 10
+sideBS = "Buy"
+account = 1
+coin = 'BTC'
+top = 39518 # first entry
+bottom =  39480 #last entry
+stop = 39466
+'''if BTC is weak you can't have stop and you shouldn't put on the trade'''
+profit = 39722
+
+
+
+# top = 41980 # first entry
+# bottom =  41269 #last entry
+# stop = 40775
+
+# top = 46511 # first entry
+# bottom =  46687 #last entry
+# stop = 46938
+
+leverage = 3
 '''IMPORTANT! must be the same as set on account'''
 
-action = 18
+action = 15
 
 ladder = 'increase2'  ### see spread options below
 entries = 20 # number of entries if ladder = 'normal' otherwise spread list length will be used
-fraction = 0.8 # The proportion of availble fund to use on the trade
+fraction = 0.4 # The proportion of availble fund to use on the trade
 
 
 average = bottom + (top - bottom)/2
