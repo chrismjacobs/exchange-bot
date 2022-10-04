@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="{{headLogo}}">
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
+
+
+</head >
+
+<main role="main" class="container-md">
+<div id="vue-app">
+
+
+    <div class="content-section m-5" :style=(getSideColor())>
+        <div class="content-section">
+            <h1> Trading Desk </h1>
+        </div>
+
+        <div class="row align-items-start">
+            <div class="col">
+                <div class="input-group mb-3">
+                    <label class="input-group-text">SIDE</label>
+                    <select @change='getSide()' class="form-select" id="sideSelect">
+                      <option value="Buy">Buy</option>
+                      <option value="Sell">Sell</option>
+                    </select>
+                </div>
+
+                <div class="input-group mb-3">
+                    <button @click="getData('first')" class="btn btn-secondary" type="button" id="button-addon1">Price</button>
+                    <button @click="clearPrice()" class="btn btn-secondary" type="button" id="button-addon1">&#9746</button>
+                    <input type="number" class="form-control" v-model="orderData.first">
+                </div>
+
+                <div class="input-group mb-3">
+                    <button @click="getData('stop')" class="btn btn-secondary" type="button" id="button-addon1">Stop</button>
+                    <input type="number" class="form-control" v-model="orderData.stop">
+                </div>
+
+                <div class="input-group mb-3">
+                    <button @click="orderData.profit=orderData.first" class="btn btn-secondary" type="button" id="button-addon1">TP</button>
+                    <input type="number" class="form-control" v-model="orderData.profit">
+                </div>
+
+                <div class="input-group mb-3">
+                    <button @click="getRR()" class="btn btn-secondary" type="button" id="button-addon1">RR: </button>
+                    <input type="text" class="form-control" v-model="orderData.rr">
+                </div>
+
+                <div class="input-group mb-3">
+                    <button @click="getData('leverage', 1)" class="btn btn-secondary" type="button" id="button-addon1">Leverage</button>
+                    <button @click="getData('leverage', 0)" :stlye="getLevStyle()" class="btn btn-secondary" type="button" id="button-addon1">Set</button>
+                    <input type="number" class="form-control" v-model="orderData.leverage">
+                </div>
+
+                <div class="input-group mb-3">
+                    <button @click="getOrder()" class="btn btn-secondary" type="button" id="button-addon1">Order</button>
+                    <input type="text" class="form-control" v-model="orderData.order">
+                </div>
+            </div>
+            <div class="col">
+                <div class="input-group mb-5">
+
+                </div>
+
+                <div class="input-group mb-3">
+                    <button @click="setSpread(1)" class="btn btn-secondary" type="button" id="button-addon1">Sprd &#8593</button>
+                    <button @click="setSpread(-1)" class="btn btn-secondary" type="button" id="button-addon1">Sprd &#8595</button>
+                    <input type="number" class="form-control" v-model="orderData.spread">
+                </div>
+
+                <div class="input-group mb-3">
+                    <button @click="setRisk(0.1)" class="btn btn-secondary" type="button" id="button-addon1">Risk &#8593</button>
+                    <button @click="setRisk(-0.1)" class="btn btn-secondary" type="button" id="button-addon1">Risk &#8595</button>
+                    <input type="number" class="form-control" v-model="orderData.risk">
+                </div>
+
+                <div class="input-group mb-3">
+                    <button @click="setTime(5)" class="btn btn-secondary" type="button" id="button-addon1">&#128337 &#8593</button>
+                    <button @click="setTime(-5)" class="btn btn-secondary" type="button" id="button-addon1">&#128337 &#8595</button>
+                    <input type="number" class="form-control" v-model="orderData.minutes">
+                </div>
+
+                <div class="input-group mb-3">
+                    <button @click="setFraction(10)" class="btn btn-secondary" type="button" id="button-addon1">Frac &#8593</button>
+                    <button @click="setFraction(-10)" class="btn btn-secondary" type="button" id="button-addon1">Frac &#8595</button>
+                    <input type="number" class="form-control" v-model="orderData.fraction">
+                </div>
+
+
+            </div>
+
+          </div>
+
+
+
+
+
+    </div> <!-- end trading desk-->
+
+    <div class="content-section row align-items-start m-5">
+
+    <div class="col-5">
+
+        <div class="content-section" >
+            <h1> Trade Journal [[currentTrade()]] <span v-if="loaded > 0">(loaded)</span> </h1>
+        </div>
+
+        <!--<div class="input-group mb-3">
+            <label class="input-group-text" for="inputGroupSelect01">TYPE</label>
+            <select @change='getType()' class="form-select" id="typeSelect">
+              <option value="SFPHL">SFP hi/lo</option>
+              <option value="SFPKL">SFP key level</option>
+              <option value="RSB">Resistance/Support Bounce</option>
+              <option value="SVP">Session Range</option>
+              <option value="CON">Confluence</option>
+            </select>
+        </div> -->
+
+        <template v-for="(item, key) in journalData" :key="key">
+            <div class="form-check form-switch">
+                <input @change="getData('first')" class="form-check-input" type="checkbox" role="switch" :id="key+'check'">
+                <label class="input-group-text">[[  key  ]]</label>
+                <textarea v-if="getCheck(key)" :id="key" class="form-control" :placeholder="placeholderData[key]" v-model="journalData[key]" :style="getText(key)"></textarea>
+            </div>
+        </template>
+
+        <br>
+
+        <div class="content-section">
+
+        <div class="input-group mb-3">
+            <button @click="recordTrade()" class="btn btn-secondary m-3 btn-dark" type="button" id="button-addon1">Record Trade</button>
+            <button @click="saveLocal(1)" class="btn btn-secondary m-3 btn-info" type="button" id="button-addon1">Save Local</button>
+            <button @click="saveLocal(0)" class="btn btn-secondary m-3 btn-danger" type="button" id="button-addon1">Clear Local</button>
+        </div>
+
+        </div>
+    </div>
+
+    <div class="col-7">
+            <div class="content-section" >
+                <h1> IMAGES </h1>
+                <input type="file" id="image" accept="image/*" @change="imageValidation('image')"> </input>
+                <button @click="deleteImage()" class="btn btn-secondary m-3 btn-danger" type="button" id="button-addon1">Delete</button>
+
+            <div class="row align-items-start">
+
+                    <div class="col-9">
+                        <img :src="imageArray[view]" class="img-fluid rounded">
+                    </div>
+                    <div class="col-3">
+                        <div v-for="(item, key) in imageArray" :key="key" style="inline:block">
+                        <img @click="view = key" :src="item" class="img-thumbnail rounded" :alt="key">
+                        </div>
+                    </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="content-section">
+        <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Title</th>
+                <th scope="col">Type</th>
+                <th scope="col">Result</th>
+              </tr>
+            </thead>
+            <tbody>
+            <template v-for="(item, key) in tradeHistory" :key="key">
+              <tr :class="getRow(item.record.RESULT[0])">
+                <th scope="row"><span  @click="loadRecord(key)">#[[key]]</span> </th>
+                <td>[[item.record.TITLE]]</td>
+                <td>[[item.record.TYPE]]</td>
+                <td>[[item.record.RESULT]]</td>
+              </tr>
+            </template>
+            </tbody>
+          </table>
+        </div>
+
+
+    </div>
+
+
+
+    <span style="display:none" id="tradeJournal">{{tradeJournal}}</span>
+
+
+
+
+</div> <!-- end vue app-->
+</main>
+
+{% block script %}
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>
+
+
+<script type="text/javascript">
+
+
+
+startVue()
+
+
+function startVue(){
+
+let vue = new Vue({
+
+    el: '#vue-app',
+    delimiters: ['[[', ']]'],
+    mounted: function() {
+        console.log(localStorage)
+        if (localStorage['lastJournal']) {
+            this.journalData = JSON.parse(localStorage.lastJournal)
+            this.imageArray = JSON.parse(localStorage.imageArray)
+        }
+
+        let tj = document.getElementById('tradeJournal').innerHTML
+        console.log('tj', tj)
+
+        this.tradeHistory = JSON.parse(tj)
+
+    },
+    data: {
+        orderData: {
+            side: '',
+            first: 0,
+            risk: 0.7,
+            spread: 2,
+            fraction: 0.95,
+            minutes: 10,
+            stop: 0,
+            leverage: 1,
+            profit: 0,
+            rr: 0,
+            order: ''
+        },
+        journalData: {
+            TITLE: '',
+            TYPE: '',
+            BLOCKS: '',
+            MOMOS: '',
+            TLINE: '',
+            VOLUME: '',
+            OFLOW: '',
+            LEVELS: '',
+            EMOTION: '',
+            REASON: '',
+            RESULT: '',
+        },
+        placeholderData: {
+            TITLE: '',
+            TYPE: '',
+            BLOCKS: 'OBs, STs, BTs, SPs',
+            MOMOS: 'stoch / timeframes / volatility / rsi',
+            TLINE: 'reg / pf / local / patterns',
+            VOLUME: 'various volume profiles / session volume / dalton / vWAPs',
+            OFLOW: 'delta / trapped / divs / signals / IMBs',
+            LEVELS: 'MACRO - Dailys Weekly / Monthly / Pivots / Ranges / POCs',
+            EMOTION: 'greed / fear / stress / focus',
+            REASON: 'TP / SL / arguments against / missed something?',
+            RESULT: 'lesson / missed',
+        },
+        tradeHistory: {},
+        imageArray: {},
+        image_b64 : null,
+        loaded: 0,
+        view: 1
+    },
+    methods: {
+        getImageStyle: function () {
+            let count = 0
+            for (let x in this.imageArray) {
+                count += 1
+            }
+            if (count > 2) {
+                return 'width:20%'
+            }
+        },
+        currentTrade: function () {
+            if (this.loaded == 0) {
+                let a = []
+                for (let x in this.tradeHistory){
+                    a.push(x)
+                }
+                return a.length + 1
+            } else {
+                return this.loaded
+            }
+        },
+        saveLocal: function (n) {
+            if (n == 1) {
+                let data = JSON.stringify(this.journalData)
+                let ia = JSON.stringify(this.imageArray)
+                localStorage.setItem('lastJournal', data)
+                localStorage.setItem('imageArray', ia)
+                console.log(localStorage)
+                alert(data)
+            } else {
+                localStorage.clear()
+                console.log(localStorage)
+            }
+
+        },
+        loadRecord: function (key) {
+            let rec = this.tradeHistory[key]
+
+            console.log('loadRecord', key, rec)
+
+            this.journalData = rec.record
+            this.imageArray = rec.imageArray
+            this.loaded = key
+        },
+        getText: function (key) {
+            //console.log('TEXT', key)
+            let e = document.getElementById(key)
+            // console.log(e)
+        },
+        getRow: function (x) {
+            let colors = {
+                A : 'table-success',
+                B : 'table-info',
+                C : 'table-warning',
+                F : 'table-danger'
+            }
+            return colors[x]
+        },
+        getCheck: function (key) {
+            // console.log('CHECK', key, this.journalData[key])
+
+            let open = ['TYPE', 'RESULT', 'REASON', 'TITLE']
+            if (open.includes(key)) {
+                return true
+            }
+            let e = document.getElementById(key +'check')
+            // console.log(e)
+            if (e && e.checked ) {
+                return true
+            } else if (e && this.journalData[key] != '') {
+                e.checked = true
+                return true
+            }
+        },
+        getSide: function () {
+            let e = document.getElementById('sideSelect')
+            let v = e.options[e.selectedIndex].value
+            return e.options[e.selectedIndex].value
+        },
+        getSideColor: function () {
+            if (this.getSide() == 'Buy') {
+                return 'background:palegreen'
+            } else {
+                return 'background:lightcoral'
+            }
+        },
+        getType: function () {
+            let e = document.getElementById('typeSelect')
+            let v = e.options[e.selectedIndex].value
+            return e.options[e.selectedIndex].value
+        },
+        getTypeColor: function () {
+            if (this.getType()[1] == 'F' ) {
+                return 'background:lavendar;width:45%;display: inline-block;'
+            }
+        },
+        getLevStyle: function () {
+            if (this.orderData.leverage < 1) {
+                return 'background:red'
+            }
+        },
+        getRR: function () {
+
+            let _this = this.orderData
+
+            let loss_d = Math.abs(_this.first - _this.stop)
+            let loss_p = Math.round((Math.abs(_this.first - _this.stop)/_this.first)*10000)/100
+            let profit_d = Math.abs(_this.first - _this.profit)
+            let profit_p = Math.round((Math.abs(_this.first - _this.profit)/_this.first)*10000)/100
+
+            let rr = Math.round((profit_d/loss_d)*1000)/1000
+
+            _this.rr = [   loss_d + '$ ',
+                    ' ' + loss_p + '%',
+                    ' ' + profit_d + '$',
+                    ' ' + profit_p + '%' ,
+                    ' ( ' + rr + ' )'
+                ]
+        },
+        clearPrice: function () {
+            this.orderData.first = 0
+        },
+        setSpread: function (n) {
+            this.orderData.spread += n
+        },
+        setRisk: function (n) {
+            this.orderData.risk += n
+        },
+        setTime: function (n) {
+            this.orderData.minutes += n
+        },
+        setFraction: function (n) {
+            this.orderData.fraction += n
+        },
+        getData: function (mode, x) {
+            console.log('getData')
+            if (x == 0) {
+                this.orderData.risk = 0
+            }
+
+            $.ajax({
+                data : {
+                    mode: mode,
+                    side: this.getSide(),
+                    minutes: this.orderData.minutes,
+                    first: this.orderData.first,
+                    stop: this.orderData.stop,
+                    risk: this.orderData.risk,
+                    fraction: this.orderData.fraction,
+                    leverage: this.orderData.leverage
+                },
+                type : 'POST',
+                url : '/getData'
+
+            })
+            .done(function(data) {
+                console.log(data.result, data.mode)
+                vue.orderData[data.mode] = data.result
+            })
+            .fail(function(){
+                  alert('error has occurred');
+            });
+        },
+        getOrder: function (mode) {
+            console.log('getOrder')
+
+            $.ajax({
+                data : {
+                    mode: true,
+                    side: this.getSide(),
+                    first: this.orderData.first,
+                    stop: this.orderData.stop,
+                    fraction: this.orderData.fraction,
+                    leverage: this.orderData.leverage,
+                    spread: this.orderData.spread
+                },
+                type : 'POST',
+                url : '/getOrder'
+
+            })
+            .done(function(data) {
+                console.log(data.result)
+                vue.orderData.order = data.result
+            })
+            .fail(function(){
+                  alert('error has occurred');
+            });
+        },
+        recordTrade: function () {
+            console.log('recordTrade')
+
+            $.ajax({
+                data : {
+                    record : JSON.stringify(this.journalData),
+                    imageArray : JSON.stringify(this.imageArray),
+                    currentTrade : this.currentTrade,
+                },
+                type : 'POST',
+                url : '/recordTrade'
+
+            })
+            .done(function(data) {
+                alert(data.result)
+
+            })
+            .fail(function(){
+                  alert('error has occurred');
+            });
+
+
+        },
+        addImage: function () {
+            console.log('addImage', JSON.stringify(this.imageArray))
+
+            $.ajax({
+                data : {
+                    b64data : this.image_b64,
+                    imageArray : JSON.stringify(this.imageArray),
+                    currentTrade : this.currentTrade,
+                },
+                type : 'POST',
+                url : '/addImage'
+
+            })
+            .done(function(data) {
+                console.log(data.result)
+                vue.imageArray = JSON.parse(data.result)
+            })
+            .fail(function(){
+                  alert('error has occurred');
+            });
+
+
+        },
+        imageValidation : function(key) {
+            let vue = this
+            var fileInput = document.getElementById(key);
+            var allowedExtensions = /(\.jpeg|\.png|\.jpg)$/i;
+            var filePath = fileInput.value;
+            console.log(filePath)
+
+          if(fileInput.files[0].size > 44000000){
+              alert("File is too big!");
+              fileInput.value = '';
+              return false;
+          }
+          else if(!allowedExtensions.exec(filePath)){
+              alert('Please upload image: .jpeg/.png only.');
+              fileInput.value = '';
+              return false;
+          }
+          else{
+              console.dir( 'FILE', fileInput.files[0] );
+              var url = window.URL.createObjectURL(fileInput.files[0]);
+              fetch(url)
+              .then(function(res){
+                  return res.blob();
+                  })
+              .then(function(savedBlob){
+                  var reader = new FileReader();
+                  reader.readAsDataURL(savedBlob);
+                  reader.onloadend = function() {
+                      vue.image_b64 = reader.result.split(',')[1];
+                      console.log(vue.image_b64)
+                      if (vue.image_b64) {
+                        vue.addImage()
+                      }
+                }
+              })
+          }//end else
+            return true
+        },
+
+    }
+
+})// end NEW VUE
+
+}
+
+
+</script>
+
+
+
+{% endblock %}
+
+
+
