@@ -3,9 +3,6 @@ static/.DS_Store
 static/json_files
 
 config.py
-.env
-venv
 
-appold.py
 
 __pycache__
