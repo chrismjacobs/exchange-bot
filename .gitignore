@@ -3,8 +3,6 @@ static/.DS_Store
 static/json_files
 
 config.py
-
-meta.py
 .env
 venv
 

@@ -17,16 +17,17 @@
 <div id="vue-app">
 
 
-    <div class="content-section m-5" :style=(getSideColor())>
-        <div class="content-section">
+    <div class="content-section m-5" style="background: darkgrey">
+        <div class="content-section" style="background:black; color:white">
             <h1> Trading Desk </h1>
         </div>
 
-        <div class="row align-items-start">
-            <div class="col">
-                <div class="input-group mb-3">
-                    <label class="input-group-text">SIDE</label>
-                    <select @change='getSide()' class="form-select" id="sideSelect">
+        <div class="row align-items-start m-2">
+            <div class="col" :style=(getSideColor())>
+                <div class="input-group m-3">
+                    <label @click="getSide()" class="input-group-text">SIDE</label>
+
+                    <select class="form-select" id="sideSelect">
                       <option value="Buy">Buy</option>
                       <option value="Sell">Sell</option>
                     </select>
@@ -44,7 +45,7 @@
                 </div>
 
                 <div class="input-group mb-3">
-                    <button @click="orderData.profit=orderData.first" class="btn btn-secondary" type="button" id="button-addon1">TP</button>
+                    <button @click="getTP()" class="btn btn-secondary" type="button" id="button-addon1">TP</button>
                     <input type="number" class="form-control" v-model="orderData.profit">
                 </div>
 
@@ -64,14 +65,25 @@
                     <input type="text" class="form-control" v-model="orderData.order">
                 </div>
             </div>
-            <div class="col">
+            <div class="col" style="background:lightgrey">
                 <div class="input-group mb-5">
 
                 </div>
 
                 <div class="input-group mb-3">
-                    <button @click="setSpread(1)" class="btn btn-secondary" type="button" id="button-addon1">Sprd &#8593</button>
-                    <button @click="setSpread(-1)" class="btn btn-secondary" type="button" id="button-addon1">Sprd &#8595</button>
+                    <button @click="setTime(5)" class="btn btn-secondary" type="button" id="button-addon1">&#128337 &#8593</button>
+                    <button @click="setTime(-5)" class="btn btn-secondary" type="button" id="button-addon1">&#128337 &#8595</button>
+                    <input type="number" class="form-control" v-model="orderData.minutes">
+                </div>
+
+                <div class="input-group mb-3">
+                    <button @click="setLadder(1)" class="btn btn-secondary" type="button" id="button-addon1">Ladder &#8593</button>
+                    <button @click="setLadder(-1)" class="btn btn-secondary" type="button" id="button-addon1">Ladder &#8595</button>
+                    <input type="number" class="form-control" v-model="orderData.ladder">
+                </div>
+
+                <div class="input-group mb-3">
+                    <button class="btn btn-secondary" type="button" id="button-addon1">Spread</button>
                     <input type="number" class="form-control" v-model="orderData.spread">
                 </div>
 
@@ -82,16 +94,62 @@
                 </div>
 
                 <div class="input-group mb-3">
-                    <button @click="setTime(5)" class="btn btn-secondary" type="button" id="button-addon1">&#128337 &#8593</button>
-                    <button @click="setTime(-5)" class="btn btn-secondary" type="button" id="button-addon1">&#128337 &#8595</button>
-                    <input type="number" class="form-control" v-model="orderData.minutes">
+                    <button @click="setFraction(0.10)" class="btn btn-secondary" type="button" id="button-addon1">Frac &#8593</button>
+                    <button @click="setFraction(-0.10)" class="btn btn-secondary" type="button" id="button-addon1">Frac &#8595</button>
+                    <input type="number" class="form-control" v-model="orderData.fraction">
                 </div>
 
                 <div class="input-group mb-3">
-                    <button @click="setFraction(10)" class="btn btn-secondary" type="button" id="button-addon1">Frac &#8593</button>
-                    <button @click="setFraction(-10)" class="btn btn-secondary" type="button" id="button-addon1">Frac &#8595</button>
-                    <input type="number" class="form-control" v-model="orderData.fraction">
+                    <button @click="getData('funds')" class="btn btn-secondary" type="button" id="button-addon1">BTC</button>
+                    <input type="number" class="form-control" v-model="btc">
                 </div>
+
+
+            </div>
+            <div class="col" style="background:orange">
+                <div class="input-group mb-5">
+
+                </div>
+
+                <div class="input-group mb-3">
+                    <button @click="getTrade('size')" class="btn btn-secondary" type="button" id="button-addon1">Size</button>
+                    <button @click="getTrade('cancel')" class="btn btn-secondary" type="button" id="button-addon1">Cancel</button>
+                    <br>
+                    <input type="text" class="form-control" v-model="limitData.action">
+                </div>
+
+                <div class="input-group mb-3">
+
+                    <div class="input-group mb-3">
+                        <button @click="getTrade('price')" class="btn btn-secondary" type="button" id="button-addon1">Price</button>
+                        <button @click="clearLimitPrice()" class="btn btn-secondary" type="button" id="button-addon1">&#9746</button>
+                        <input type="number" class="form-control" v-model="limitData.price">
+                    </div>
+
+                    <div class="input-group mb-3">
+                        <button @click="setLimitSpread(1)" class="btn btn-secondary" type="button" id="button-addon1">Limit &#8593</button>
+                        <button @click="setLimitSpread(-1)" class="btn btn-secondary" type="button" id="button-addon1">Limit &#8595</button>
+                        <input type="number" class="form-control" v-model="limitData.spread">
+                    </div>
+                    <div class="input-group mb-3">
+                        <button @click="setLimitFraction(0.05)" class="btn btn-secondary" type="button" id="button-addon1">% &#8593</button>
+                        <button @click="setLimitFraction(-0.05)" class="btn btn-secondary" type="button" id="button-addon1">% &#8595</button>
+                        <input type="number" class="form-control" v-model="limitData.fraction">
+                    </div>
+
+                    <div class="input-group mb-3">
+                        <button @click="setLimitFraction(0.65)" class="btn btn-secondary" type="button" id="button-addon1">65%</button>
+                        <button @click="setLimitFraction(0.25)" class="btn btn-secondary" type="button" id="button-addon1">25%</button>
+                        <button @click="setLimitFraction(0.10)" class="btn btn-secondary" type="button" id="button-addon1">10%</button>
+                    </div>
+
+                    <div class="input-group mb-3">
+                        <button @click="getTrade('limit')" class="btn btn-secondary" type="button" id="button-addon1">Limit</button>
+                        <input type="text" class="form-control" v-model="limitData.limit">
+                    </div>
+
+                </div>
+
 
 
             </div>
@@ -125,9 +183,9 @@
 
         <template v-for="(item, key) in journalData" :key="key">
             <div class="form-check form-switch">
-                <input @change="getData('first')" class="form-check-input" type="checkbox" role="switch" :id="key+'check'">
+                <input class="form-check-input" type="checkbox" role="switch" :id="key+'check'">
                 <label class="input-group-text">[[  key  ]]</label>
-                <textarea v-if="getCheck(key)" :id="key" class="form-control" :placeholder="placeholderData[key]" v-model="journalData[key]" :style="getText(key)"></textarea>
+                <textarea :id="key" class="form-control" :placeholder="placeholderData[key]" v-model="journalData[key]" :style="getText(key)"></textarea>
             </div>
         </template>
 
@@ -149,6 +207,7 @@
                 <h1> IMAGES </h1>
                 <input type="file" id="image" accept="image/*" @change="imageValidation('image')"> </input>
                 <button @click="deleteImage()" class="btn btn-secondary m-3 btn-danger" type="button" id="button-addon1">Delete</button>
+                <button @click="cycleImage()" class="btn btn-secondary m-3 btn-info" type="button" id="button-addon2">Cycle</button>
 
             <div class="row align-items-start">
 
@@ -212,7 +271,8 @@
 
 <script type="text/javascript">
 
-
+const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
+const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
 
 startVue()
 
@@ -231,34 +291,38 @@ let vue = new Vue({
         }
 
         let tj = document.getElementById('tradeJournal').innerHTML
-        console.log('tj', tj)
+        //console.log('tj', tj)
 
         this.tradeHistory = JSON.parse(tj)
+
+        this.getData('leverage', 0)
+        this.getData('funds')
+
 
     },
     data: {
         orderData: {
-            side: '',
+            side: 'Buy',
             first: 0,
             risk: 0.7,
-            spread: 2,
+            spread: 0.5,
+            ladder: 2,
             fraction: 0.95,
             minutes: 10,
             stop: 0,
-            leverage: 1,
+            leverage: 2,
             profit: 0,
             rr: 0,
+            funds: 0,
             order: ''
         },
         journalData: {
             TITLE: '',
             TYPE: '',
             BLOCKS: '',
-            MOMOS: '',
-            TLINE: '',
-            VOLUME: '',
-            OFLOW: '',
+            OFVOL: '',
             LEVELS: '',
+            MOVO: '',
             EMOTION: '',
             REASON: '',
             RESULT: '',
@@ -266,31 +330,55 @@ let vue = new Vue({
         placeholderData: {
             TITLE: '',
             TYPE: '',
-            BLOCKS: 'OBs, STs, BTs, SPs',
-            MOMOS: 'stoch / timeframes / volatility / rsi',
-            TLINE: 'reg / pf / local / patterns',
-            VOLUME: 'various volume profiles / session volume / dalton / vWAPs',
-            OFLOW: 'delta / trapped / divs / signals / IMBs',
-            LEVELS: 'MACRO - Dailys Weekly / Monthly / Pivots / Ranges / POCs',
+            BLOCKS: 'PVAs, OBs, STs, BTs, SPs',
+            MOVO: 'stoch / timeframes / volatility / rsi',
+            OFVOL: 'delta / trapped / divs / signals / IMBs / various volume profiles / session volume / dalton / vWAPs',
+            LEVELS: 'Trend lines - reg / pf / local / patterns / Golden Pockets / MACRO - Dailys Weekly / Monthly / Pivots / Ranges / POCs',
             EMOTION: 'greed / fear / stress / focus',
             REASON: 'TP / SL / arguments against / missed something?',
             RESULT: 'lesson / missed',
         },
         tradeHistory: {},
+        limitData: {
+            action: '',
+            price: 0,
+            spread: 1,
+            fraction: 0.65,
+            limit: ''
+        },
         imageArray: {},
         image_b64 : null,
         loaded: 0,
-        view: 1
+        view: 1,
+        btc: 0
     },
     methods: {
-        getImageStyle: function () {
-            let count = 0
+        cycleImage: function () {
+            let count = 1
             for (let x in this.imageArray) {
                 count += 1
             }
-            if (count > 2) {
-                return 'width:20%'
+            if (this.view == count) {
+               this.view = 1
+            } else {
+               this.view +=1
             }
+        },
+        deleteImage: function () {
+            console.log(this.imageArray)
+            delete this.imageArray[this.view]
+
+            let newArray = {}
+
+            let count = 1
+            for (let x in this.imageArray) {
+                newArray[count] = this.imageArray[x]
+                count += 1
+            }
+
+            this.imageArray = newArray
+
+
         },
         currentTrade: function () {
             if (this.loaded == 0) {
@@ -325,6 +413,7 @@ let vue = new Vue({
             this.journalData = rec.record
             this.imageArray = rec.imageArray
             this.loaded = key
+            this.view = 1
         },
         getText: function (key) {
             //console.log('TEXT', key)
@@ -359,13 +448,16 @@ let vue = new Vue({
         getSide: function () {
             let e = document.getElementById('sideSelect')
             let v = e.options[e.selectedIndex].value
+            this.orderData.side = undefined
+            this.orderData.side = v
+            console.log(v)
             return e.options[e.selectedIndex].value
         },
         getSideColor: function () {
             if (this.getSide() == 'Buy') {
-                return 'background:palegreen'
+                return 'background:mediumseagreen'
             } else {
-                return 'background:lightcoral'
+                return 'background:MediumVioletRed'
             }
         },
         getType: function () {
@@ -385,27 +477,58 @@ let vue = new Vue({
         },
         getRR: function () {
 
-            let _this = this.orderData
+            let OD = this.orderData
 
-            let loss_d = Math.abs(_this.first - _this.stop)
-            let loss_p = Math.round((Math.abs(_this.first - _this.stop)/_this.first)*10000)/100
-            let profit_d = Math.abs(_this.first - _this.profit)
-            let profit_p = Math.round((Math.abs(_this.first - _this.profit)/_this.first)*10000)/100
+            let loss_d = Math.abs(OD.first - OD.stop)
+            let loss_p = Math.round((Math.abs(OD.first - OD.stop)/OD.first)*10000)/100
+            let profit_d = Math.abs(OD.first - OD.profit)
+            let profit_p = Math.round((Math.abs(OD.first - OD.profit)/OD.first)*10000)/100
 
             let rr = Math.round((profit_d/loss_d)*1000)/1000
 
-            _this.rr = [   loss_d + '$ ',
+            OD.rr = [ 'Stoploss ', loss_d + '$ ',
                     ' ' + loss_p + '%',
+                    ' Takeprofit',
                     ' ' + profit_d + '$',
                     ' ' + profit_p + '%' ,
                     ' ( ' + rr + ' )'
                 ]
+            //console.log(OD.rr)
+        },
+        getTP: function () {
+
+            let _this = this.orderData
+
+            let ratio = 2
+
+            let loss_d = Math.abs(_this.first - _this.stop)
+            let price = this.orderData.first
+            let side = this.orderData.side
+
+            let tp
+
+            console.log('tp', side, loss_d, price, ratio, price + (loss_d*ratio) )
+
+            if (side == 'Buy') {
+                tp = price + (loss_d*ratio)
+            } else {
+                tp = price - (loss_d*ratio)
+            }
+
+            this.orderData.profit = tp
+
         },
         clearPrice: function () {
             this.orderData.first = 0
         },
-        setSpread: function (n) {
-            this.orderData.spread += n
+        clearLimitPrice: function () {
+            this.limitData.price = 0
+        },
+        setLimitSpread: function (n) {
+            this.limitData.spread += n
+        },
+        setLadder: function (n) {
+            this.orderData.ladder += n
         },
         setRisk: function (n) {
             this.orderData.risk += n
@@ -413,11 +536,19 @@ let vue = new Vue({
         setTime: function (n) {
             this.orderData.minutes += n
         },
+        setLimitFraction: function (n) {
+            if (Math.abs(n) > 0.05) {
+                this.limitData.fraction = n
+            } else {
+                this.limitData.fraction += n
+            }
+        },
         setFraction: function (n) {
             this.orderData.fraction += n
         },
         getData: function (mode, x) {
             console.log('getData')
+            let r = this.orderData.risk
             if (x == 0) {
                 this.orderData.risk = 0
             }
@@ -431,7 +562,8 @@ let vue = new Vue({
                     stop: this.orderData.stop,
                     risk: this.orderData.risk,
                     fraction: this.orderData.fraction,
-                    leverage: this.orderData.leverage
+                    leverage: this.orderData.leverage,
+                    btc: this.orderData.btc,
                 },
                 type : 'POST',
                 url : '/getData'
@@ -439,7 +571,41 @@ let vue = new Vue({
             })
             .done(function(data) {
                 console.log(data.result, data.mode)
-                vue.orderData[data.mode] = data.result
+                if (data.mode == 'alert') {
+                    console.log('alert')
+                    //alert(data.result)
+                } else if (data.mode == 'funds') {
+                    vue.orderData[data.mode] = data.result
+                    vue.btc = data.result
+                } else {
+                    vue.orderData[data.mode] = data.result
+                }
+                if (vue.orderData.risk == 0) {
+                    vue.orderData.risk = r
+                }
+                return data.result
+            })
+            .fail(function(){
+                  alert('error has occurred');
+            });
+        },
+        getTrade: function (mode) {
+            console.log('getTrade')
+
+            $.ajax({
+                data : {
+                    mode: mode,
+                    spread: this.limitData.spread,
+                    price: this.limitData.price,
+                    fraction: this.limitData.fraction
+                },
+                type : 'POST',
+                url : '/getTrade'
+
+            })
+            .done(function(data) {
+                console.log(data.result)
+                vue.limitData[data.mode] = data.result
             })
             .fail(function(){
                   alert('error has occurred');
@@ -456,7 +622,8 @@ let vue = new Vue({
                     stop: this.orderData.stop,
                     fraction: this.orderData.fraction,
                     leverage: this.orderData.leverage,
-                    spread: this.orderData.spread
+                    spread: this.orderData.spread,
+                    ladder: this.orderData.ladder
                 },
                 type : 'POST',
                 url : '/getOrder'
@@ -555,6 +722,19 @@ let vue = new Vue({
             return true
         },
 
+    },
+    watch: {
+        btc: function () {
+            console.log('watch', this.btc)
+
+            let funds = this.orderData.funds
+
+            let frac = (this.btc/funds)
+            if (frac == 1) {
+                frac = 0.95
+            }
+            this.orderData.fraction = frac
+      }
     }
 
 })// end NEW VUE

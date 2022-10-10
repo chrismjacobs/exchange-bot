@@ -93,20 +93,97 @@ def getData():
         price = float(session.latest_information_for_symbol(symbol="BTCUSD")['result'][0]['last_price'])
         return jsonify({'result' : price, 'mode' : mode})
     elif mode == 'leverage':
-        print('LEV: ', side, risk, fraction)
-        leverage = setLeverage(first, stop, risk, fraction, leverage)
+
+        position = session.my_position(symbol="BTCUSD")['result']
+        print(position)
+        positionSize = position['size']
+        positionLev = float(position['leverage'])
+
+
+        print('LEV: ', side, risk, fraction, positionSize)
+
+        if positionSize == 0 and positionLev != leverage:
+            leverage = setLeverage(first, stop, risk, fraction, leverage)
+        else:
+            mode = 'alert'
+            leverage = 'leverage no change'
+
         return jsonify({'result' : leverage, 'mode' : mode})
+
     elif mode == 'stop':
         price = getHiLow(minutes, side)
-        return jsonify({'result' : price, 'mode' : mode})
 
+        stopAdjust = {
+            'Buy' : price - 10,
+            'Sell' : price + 10
+        }
+
+        stop = stopAdjust[side]
+
+        return jsonify({'result' : stop, 'mode' : mode})
+
+    elif mode == 'funds':
+        funds = session.get_wallet_balance()['result']['BTC']['equity']
+        return jsonify({'result' : funds, 'mode' : mode})
+
+
+@app.route('/getTrade', methods=['POST'])
+def getTrade():
+    mode = request.form ['mode']
+    spread = int(request.form ['spread'])
+    price = int(request.form ['price'])
+    fraction = float(request.form ['fraction'])
+
+    position = session.my_position(symbol="BTCUSD")['result']
+    print(position)
+    positionSide = position['side']
+    positionSize = int(position['size'])
+
+
+    if mode == 'size':
+        result = positionSize
+        mode = 'action'
+
+    elif mode == 'cancel':
+        result = session.cancel_all_active_orders(symbol="BTCUSD")['ret_msg']
+        mode = 'action'
+
+    elif mode == 'price':
+        result =  str(round(float(session.latest_information_for_symbol(symbol="BTCUSD")['result'][0]['last_price'])))
+
+    elif mode == 'limit':
+
+        if price == 0:
+            currentPrice = round(float(session.latest_information_for_symbol(symbol="BTCUSD")['result'][0]['last_price']))
+
+            limitPrice = {
+                'Buy' : currentPrice + spread,
+                'Sell' : currentPrice - spread
+            }
+
+            price = limitPrice[positionSide]
+
+        options = ['Sell', 'Buy']
+        options.remove(positionSide)
+        side = options[0]
+        stop = None
+        value = price
+
+        print(side, value, stop, positionSize, fraction)
+
+        result = placeOrder(side, value, stop, positionSize*fraction)
+
+
+
+    return jsonify({'result' : result, 'mode' : mode})
 
 @app.route('/getOrder', methods=['POST'])
 def getOrder():
     mode = request.form ['mode']
     side = request.form ['side']
     first = float(request.form ['first'])
-    spread = int(request.form ['spread'])
+    spread = float(request.form ['spread'])
+    ladder = int(request.form ['ladder'])
     fraction = float(request.form ['fraction'])
     stop = float(request.form ['stop'])
     leverage = float(request.form ['leverage'])
@@ -120,11 +197,11 @@ def getOrder():
     if first == None or first == 0:
         first = price
 
-    for i in range(0, spread):
+    for i in range(1, ladder):
         if side == 'Buy':
-            spreadArray.append(first - i*0.5)
+            spreadArray.append(first - i*spread)
         else:
-            spreadArray.append(first + i*0.5)
+            spreadArray.append(first + i*spread)
 
     qty = (price * funds * leverage) * fraction
     print('QTY', price, funds, leverage, qty)
