@@ -6,6 +6,7 @@ import time
 import base64
 import boto3
 import datetime
+from meta import session, s3_resource
 
 currentDate = datetime.date.today()
 month = currentDate.strftime("%B")
@@ -13,28 +14,6 @@ month = currentDate.strftime("%B")
 print(currentDate)
 print(month)
 
-
-keys = config.keys
-
-
-session = inverse_perpetual.HTTP(
-    endpoint='https://api.bybit.com',
-    api_key=keys[1]['api_key'],
-    api_secret=keys[1]['api_secret']
-)
-ws = inverse_perpetual.WebSocket(
-    test=False,
-    api_key=keys[1]['api_key'],
-    api_secret=keys[1]['api_secret']
-)
-
-
-s3_resource = boto3.resource('s3',
-        aws_access_key_id=config.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key= config.AWS_SECRET_ACCESS_KEY)
-
-
-print('SESSION', session)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = config.SECRET_KEY
@@ -54,27 +33,6 @@ def home():
 
     return render_template('tradingdesk.html', tradeJournal=json.dumps(jload))
 
-
-'''##### edit trade info #####'''
-
-# side = 'Buy'
-# first = None #first entry
-# stop = None
-# spread = 2
-# percent_risk = 0.5
-# lev = None
-# minutes = 20
-# fraction = 0.95
-
-
-'''IMPORTANT! must be the same as set on account'''
-
-#################################################################
-
-# position = session.my_position(symbol="BTCUSD")['result']['size']
-# pnl =  session.get_wallet_balance()['result']['BTC']['realised_pnl']
-# cancel =  session.cancel_all_active_orders(symbol="BTCUSD")['ret_msg']
-# rate =  json.dumps(session.query_trading_fee_rate(symbol="BTCUSD"))
 
 @app.route('/getData', methods=['POST'])
 def getData():
@@ -123,6 +81,7 @@ def getData():
         return jsonify({'result' : stop, 'mode' : mode})
 
     elif mode == 'funds':
+        print('getFunds')
         funds = session.get_wallet_balance()['result']['BTC']['equity']
         return jsonify({'result' : funds, 'mode' : mode})
 
