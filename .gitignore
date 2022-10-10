@@ -1,8 +1,7 @@
 .DS_Store
 __pycache__/
 oldpy/
-static/.DS_Store
-static/json_files
+static/keys.json
 
 config.py
 
