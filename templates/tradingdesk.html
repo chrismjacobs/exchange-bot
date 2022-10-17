@@ -20,21 +20,20 @@
     <div class="content-section m-5" style="background: darkgrey">
         <div class="content-section" style="background:black; color:white">
             <h1> Trading Desk </h1>
+            [[report]]
         </div>
 
         <div class="row align-items-start m-2">
             <div class="col" :style=(getSideColor())>
-                <div class="input-group m-3">
-                    <label @click="getSide()" class="input-group-text">SIDE</label>
 
-                    <select class="form-select" id="sideSelect">
-                      <option value="Buy">Buy</option>
-                      <option value="Sell">Sell</option>
-                    </select>
+                <div class="input-group mb-3 mt-3">
+                    <button @click="getOrder()" class="btn btn-secondary" type="button" id="button-addon1">Order</button>
+                    <input type="text" class="form-control" v-model="orderData.order">
                 </div>
 
                 <div class="input-group mb-3">
-                    <button @click="getData('first')" class="btn btn-secondary" type="button" id="button-addon1">Price</button>
+                    <button @click="getData('first', 'Buy')" class="btn btn-secondary" type="button" id="button-addon1">Buy</button>
+                    <button @click="getData('first', 'Sell')" class="btn btn-secondary" type="button" id="button-addon1">Sell</button>
                     <button @click="clearPrice()" class="btn btn-secondary" type="button" id="button-addon1">&#9746</button>
                     <input type="number" class="form-control" v-model="orderData.first">
                 </div>
@@ -60,14 +59,21 @@
                     <input type="number" class="form-control" v-model="orderData.leverage">
                 </div>
 
-                <div class="input-group mb-3">
-                    <button @click="getOrder()" class="btn btn-secondary" type="button" id="button-addon1">Order</button>
-                    <input type="text" class="form-control" v-model="orderData.order">
-                </div>
-            </div>
-            <div class="col" style="background:lightgrey">
-                <div class="input-group mb-5">
+                <div class="m-3">
+                    CHECKLIST
+                    <br>
+                    <input class="form-check-input" type="checkbox" role="switch" name='tradecheck'> CVD divergence
+                    <br>
+                    <input class="form-check-input" type="checkbox" role="switch" name='tradecheck'> Open Interest
+                    <br>
+                    <input class="form-check-input" type="checkbox" role="switch" name='tradecheck'> The better target
+                    <br>
+                    <input class="form-check-input" type="checkbox" role="switch" name='tradecheck'> Consider the other direction               </div>
 
+            </div>
+            <div v-if="!mobile" class="col" style="background:lightgrey">
+
+                <div class="m-3">
                 </div>
 
                 <div class="input-group mb-3">
@@ -104,9 +110,18 @@
                     <input type="number" class="form-control" v-model="btc">
                 </div>
 
+                <div class="mt-3 mb-3">
+                    <button @click="oiTimer()" class="btn btn-secondary" type="button" id="button-addon1">OI</button>
+                    <button @click="clearOI()" class="btn btn-secondary" type="button" id="button-addon1">&#9746</button>
+                    Buy:[[buysellRatio.buy_ratio]]/Sell:[[buysellRatio.sell_ratio]] <br>
+                    <span :style="getOI(2)" class="text-white m-2"> 2 </span>  [[ Math.round(oiDiff[2]) ]] <br>
+                    <span :style="getOI(5)" class="text-white m-2"> 5 </span> [[ Math.round(oiDiff[5]) ]] <br>
+                    <span :style="getOI(15)" class="text-white m-2"> 15 </span> [[ Math.round(oiDiff[15]) ]] <br>
+                </div>
+
 
             </div>
-            <div class="col" style="background:orange">
+            <div v-if="!mobile" class="col" style="background:orange">
                 <div class="input-group mb-5">
 
                 </div>
@@ -162,12 +177,22 @@
 
     </div> <!-- end trading desk-->
 
-    <div class="content-section row align-items-start m-5">
+    <div v-if="!mobile" class="content-section row align-items-start m-5">
 
     <div class="col-5">
 
         <div class="content-section" >
             <h1> Trade Journal [[currentTrade()]] <span v-if="loaded > 0">(loaded)</span> </h1>
+        </div>
+        <div>
+            <select class="form-select" id="entrySelect">
+                <template v-for="(item, key) in tradeHistory" :key="key">
+                    <option :value="key">[[key]] [[item.record.TITLE]] </option>
+                </template>
+            </select>
+            <label class="btn" @click="getEntry()">LOAD</label>
+            <label class="btn" @click="cycleJournal()">CYCLE</label>
+            <label class="btn" @click="edit = !edit">EDIT</label>
         </div>
 
         <!--<div class="input-group mb-3">
@@ -183,9 +208,15 @@
 
         <template v-for="(item, key) in journalData" :key="key">
             <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" role="switch" :id="key+'check'">
                 <label class="input-group-text">[[  key  ]]</label>
+                <div v-if="loaded == 0 || edit ">
                 <textarea :id="key" class="form-control" :placeholder="placeholderData[key]" v-model="journalData[key]" :style="getText(key)"></textarea>
+                </div>
+                <div :class="getJRow(journalData.RESULT)" v-else>
+                    <template v-for="x in getSplit(journalData[key])">
+                    <span> [[x]] </span><br>
+                    </template>
+                </div>
             </div>
         </template>
 
@@ -224,7 +255,7 @@
         </div>
     </div>
 
-    <div class="content-section">
+    <div v-if="!mobile"  class="content-section">
         <table class="table">
             <thead>
               <tr>
@@ -271,8 +302,15 @@
 
 <script type="text/javascript">
 
-const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
-const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
+var report = navigator.userAgent
+console.log(report)
+
+let mobile = false
+
+if (report.includes('Android') || report.includes('iPhone') ) {
+    mobile = true
+    console.log('mobile')
+}
 
 startVue()
 
@@ -297,12 +335,10 @@ let vue = new Vue({
 
         this.getData('leverage', 0)
         this.getData('funds')
-
-
     },
     data: {
         orderData: {
-            side: 'Buy',
+            side: '',
             first: 0,
             risk: 0.7,
             spread: 0.5,
@@ -319,10 +355,9 @@ let vue = new Vue({
         journalData: {
             TITLE: '',
             TYPE: '',
-            BLOCKS: '',
-            OFVOL: '',
             LEVELS: '',
-            MOVO: '',
+            OFVOL: '',
+            OTHER: '',
             EMOTION: '',
             REASON: '',
             RESULT: '',
@@ -330,12 +365,11 @@ let vue = new Vue({
         placeholderData: {
             TITLE: '',
             TYPE: '',
-            BLOCKS: 'PVAs, OBs, STs, BTs, SPs',
-            MOVO: 'stoch / timeframes / volatility / rsi',
+            OTHER: 'PVAs, OBs, STs, BTs, SPs / stoch / timeframes / volatility / rsi',
             OFVOL: 'delta / trapped / divs / signals / IMBs / various volume profiles / session volume / dalton / vWAPs',
             LEVELS: 'Trend lines - reg / pf / local / patterns / Golden Pockets / MACRO - Dailys Weekly / Monthly / Pivots / Ranges / POCs',
             EMOTION: 'greed / fear / stress / focus',
-            REASON: 'TP / SL / arguments against / missed something?',
+            REASONS: 'SL / TP / For and against',
             RESULT: 'lesson / missed',
         },
         tradeHistory: {},
@@ -350,11 +384,34 @@ let vue = new Vue({
         image_b64 : null,
         loaded: 0,
         view: 1,
-        btc: 0
+        btc: 0,
+        edit: false,
+        openInterest : {},
+        buysellRatio : {},
+        oiDiff: {
+            15 : 0,
+            5 : 0,
+            2 : 0
+        },
+        oi_timer:  null,
+        report: report,
+        mobile: mobile
     },
     methods: {
+        getSplit: function (x) {
+            return x.split('/')
+        },
+        oiTimer: function () {
+            this.getOIdata()
+            this.oi_timer = setInterval(this.getOIdata, 3000)
+            console.log('timer', this.oi_timer)
+        },
+        getOIdata: function () {
+            console.log('gettest')
+            vue.getData('oiData')
+        },
         cycleImage: function () {
-            let count = 1
+            let count = 0
             for (let x in this.imageArray) {
                 count += 1
             }
@@ -363,6 +420,19 @@ let vue = new Vue({
             } else {
                this.view +=1
             }
+            console.log('cycle', count)
+        },
+        cycleJournal: function () {
+            let count = 0
+            for (let x in this.tradeHistory) {
+                count += 1
+            }
+            if (this.loaded == count || this.loaded == 0) {
+               this.loadRecord(1)
+            } else {
+                this.loadRecord(parseInt(this.loaded) + 1)
+            }
+            console.log('cycle entry', count)
         },
         deleteImage: function () {
             console.log(this.imageArray)
@@ -429,8 +499,47 @@ let vue = new Vue({
             }
             return colors[x]
         },
+        getJRow: function (x) {
+            let colors = {
+                A : 'bg-success  text-white',
+                B : 'bg-info  text-white',
+                C : 'bg-warning',
+                F : 'bg-danger  text-white',
+                O : 'bg-dark  text-white',
+            }
+            let cl =  colors[x[0]] +' m-2'
+            console.log('jRow', cl)
+            return cl
+        },
+        getOI: function (x) {
+            let c = 'blue'
+            let diff = this.oiDiff[x]
+
+            if (diff < 0) {
+                c = 'red'
+            }
+            let w = Math.round(Math.abs(diff))/6
+
+            let aDiff = Math.abs(diff)
+
+            if (aDiff > 4000) {
+                w = 80
+                //console.log('80', diff, x)
+            } else if (aDiff < 200) {
+                w = 5
+                //console.log('5', diff, x)
+            } else {
+                w = Math.round((aDiff/3200)*80)
+                //console.log('calc', diff, x)
+            }
+
+            let ws = w.toString()
+
+            return 'display: inline-block; width:' + ws + '%;' + 'background:' + c
+
+        },
         getCheck: function (key) {
-            // console.log('CHECK', key, this.journalData[key])
+            // not used anymore
 
             let open = ['TYPE', 'RESULT', 'REASON', 'TITLE']
             if (open.includes(key)) {
@@ -453,11 +562,20 @@ let vue = new Vue({
             console.log(v)
             return e.options[e.selectedIndex].value
         },
+        getEntry: function () {
+            let e = document.getElementById('entrySelect')
+            let v = e.options[e.selectedIndex].value
+            console.log('entry', v)
+            this.loadRecord(v)
+            return e.options[e.selectedIndex].value
+        },
         getSideColor: function () {
-            if (this.getSide() == 'Buy') {
+            if (this.orderData.side == 'Buy') {
                 return 'background:mediumseagreen'
-            } else {
+            } else if (this.orderData.side == 'Sell'){
                 return 'background:MediumVioletRed'
+            } else {
+                return 'background:Grey'
             }
         },
         getType: function () {
@@ -521,6 +639,9 @@ let vue = new Vue({
         clearPrice: function () {
             this.orderData.first = 0
         },
+        clearOI: function () {
+            clearInterval(this.oi_timer)
+        },
         clearLimitPrice: function () {
             this.limitData.price = 0
         },
@@ -546,17 +667,36 @@ let vue = new Vue({
         setFraction: function (n) {
             this.orderData.fraction += n
         },
+        calcOI: function () {
+            let f = 1000
+            let x = this.openInterest
+            this.oiDiff[15] = (x[1] - x[4])/f
+            this.oiDiff[5] = (x[1] - x[3])/f
+            this.oiDiff[2] = (x[1] - x[2])/f
+        },
         getData: function (mode, x) {
-            console.log('getData')
-            let r = this.orderData.risk
+            console.log('getData', mode, x)
+
+            //mark r to reset risk later
+            const r = this.orderData.risk
+
             if (x == 0) {
                 this.orderData.risk = 0
             }
 
+
+            if (x == 'Buy') {
+                this.orderData.side = 'Buy'
+            } else if (x == 'Sell') {
+                this.orderData.side = 'Sell'
+            }
+
+            console.log('risk', this.orderData.risk)
+
             $.ajax({
                 data : {
                     mode: mode,
-                    side: this.getSide(),
+                    side: this.orderData.side,
                     minutes: this.orderData.minutes,
                     first: this.orderData.first,
                     stop: this.orderData.stop,
@@ -577,6 +717,14 @@ let vue = new Vue({
                 } else if (data.mode == 'funds') {
                     vue.orderData[data.mode] = data.result
                     vue.btc = data.result
+                } else if (data.mode == 'first') {
+                    vue.orderData[data.mode] = data.result
+                    vue.getData('oiData')
+                } else if (data.mode == 'oiData') {
+                    vue.openInterest = JSON.parse(data.oi)
+                    vue.buysellRatio = JSON.parse(data.ls)
+                    vue.calcOI()
+                    console.log('oiData return', vue.openInterest, vue.buysellRatio)
                 } else {
                     vue.orderData[data.mode] = data.result
                 }
@@ -617,7 +765,7 @@ let vue = new Vue({
             $.ajax({
                 data : {
                     mode: true,
-                    side: this.getSide(),
+                    side: this.orderData.side,
                     first: this.orderData.first,
                     stop: this.orderData.stop,
                     fraction: this.orderData.fraction,
