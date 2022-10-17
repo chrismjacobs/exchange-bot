@@ -206,13 +206,17 @@ def recordTrade():
     currentTrade = request.form ['currentTrade']
 
     print ('put MetaFile')
-
-
+    bucket = 'rekt-journal'
     key = 'tradeJournal_' + month + '.json'
+
+    content_object = s3_resource.Object( bucket, key )
+    file_content = content_object.get()['Body'].read().decode('utf-8')
+    jload = json.loads(file_content)
+
     string = "static/" + key
 
-    with open(string, "r") as f:
-        jload = json.load(f)
+    # with open(string, "r") as f:
+    #     jload = json.load(f)
 
     jload[currentTrade] = {}
     jload[currentTrade]['record'] = json.loads(record)
@@ -221,7 +225,6 @@ def recordTrade():
     with open(string, 'w') as json_file:
         json.dump(jload, json_file)
 
-    bucket = 'rekt-journal'
     jstring = json.dumps(jload)
     s3_resource.Bucket(bucket).put_object(
         Key=key, Body=jstring)
