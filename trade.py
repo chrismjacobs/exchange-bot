@@ -1,5 +1,4 @@
-from flask import Flask, request, abort, render_template, jsonify
-from pybit import inverse_perpetual
+from flask import Flask, request, render_template, jsonify
 import config
 import json
 import time
@@ -45,11 +44,30 @@ def getData():
     stop = float(request.form ['stop'])
     leverage = float(request.form ['leverage'])
 
+
     print('SIDE: ', side, minutes, risk, fraction, stop, first)
 
+    latest = session.latest_information_for_symbol(symbol="BTCUSD")
+    getBTC = latest['result'][0]
+    print('latest', latest)
+    print('open interest', getBTC['open_interest'], round(float(latest['time_now'])))
+
+    oi = session.open_interest(symbol="BTCUSD", period="5min", limit=6)['result']
+    ls = session.long_short_ratio(symbol="BTCUSD", limit=1, period="5min")['result']
+    print('OI', oi, ls)
+
+    oiDict = {
+        1 : getBTC['open_interest'],
+        2 : oi[0]['open_interest'],
+        3 : oi[1]['open_interest'],
+        4 : oi[2]['open_interest']
+    }
+
     if mode == 'first':
-        price = float(session.latest_information_for_symbol(symbol="BTCUSD")['result'][0]['last_price'])
-        return jsonify({'result' : price, 'mode' : mode})
+        price = float(getBTC['last_price'])
+        return jsonify({'result' : price, 'mode' : mode })
+    if mode == 'oiData':
+        return jsonify({'mode' : mode, 'oi' : json.dumps(oiDict), 'ls': json.dumps(ls[0])})
     elif mode == 'leverage':
 
         position = session.my_position(symbol="BTCUSD")['result']
@@ -58,7 +76,7 @@ def getData():
         positionLev = float(position['leverage'])
 
 
-        print('LEV: ', side, risk, fraction, positionSize)
+        print('LEV: ', side, risk, fraction, positionSize, positionLev, leverage)
 
         if positionSize == 0 and positionLev != leverage:
             leverage = setLeverage(first, stop, risk, fraction, leverage)
@@ -81,7 +99,7 @@ def getData():
         return jsonify({'result' : stop, 'mode' : mode})
 
     elif mode == 'funds':
-        print('getFunds')
+        print('getFunds', session.announcement())
         funds = session.get_wallet_balance()['result']['BTC']['equity']
         return jsonify({'result' : funds, 'mode' : mode})
 
@@ -94,7 +112,10 @@ def getTrade():
     fraction = float(request.form ['fraction'])
 
     position = session.my_position(symbol="BTCUSD")['result']
-    print(position)
+    print('position', position)
+    latest = session.latest_information_for_symbol(symbol="BTCUSD")['result'][0]
+    print('latest', latest)
+
     positionSide = position['side']
     positionSize = int(position['size'])
 
@@ -108,12 +129,12 @@ def getTrade():
         mode = 'action'
 
     elif mode == 'price':
-        result =  str(round(float(session.latest_information_for_symbol(symbol="BTCUSD")['result'][0]['last_price'])))
+        result =  str(round(float(latest['last_price'])))
 
     elif mode == 'limit':
 
         if price == 0:
-            currentPrice = round(float(session.latest_information_for_symbol(symbol="BTCUSD")['result'][0]['last_price']))
+            currentPrice = round(float(latest['last_price']))
 
             limitPrice = {
                 'Buy' : currentPrice + spread,
@@ -147,16 +168,21 @@ def getOrder():
     stop = float(request.form ['stop'])
     leverage = float(request.form ['leverage'])
 
-
     spreadArray = []
 
+    position = session.my_position(symbol="BTCUSD")['result']
     price = float(session.latest_information_for_symbol(symbol="BTCUSD")['result'][0]['last_price'])
     funds = session.get_wallet_balance()['result']['BTC']['equity']
+
+    ### check/set leverage
+    positionLev = float(position['leverage'])
+    if float(leverage) != positionLev:
+        session.set_leverage(symbol="BTCUSD", leverage=leverage)
 
     if first == None or first == 0:
         first = price
 
-    for i in range(1, ladder):
+    for i in range(1, ladder+1):
         if side == 'Buy':
             spreadArray.append(first - i*spread)
         else:
