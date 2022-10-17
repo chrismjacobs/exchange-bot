@@ -3,6 +3,7 @@ oldpy/
 static/keys.json
 
 config.py
+meta.py
 
 
 __pycache__
