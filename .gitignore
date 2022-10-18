@@ -1,7 +1,6 @@
 .DS_Store
 oldpy/
 static/keys.json
-
 config.py
 meta.py
 

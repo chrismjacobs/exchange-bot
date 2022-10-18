@@ -312,6 +312,9 @@ if (report.includes('Android') || report.includes('iPhone') ) {
     console.log('mobile')
 }
 
+let pw = window.location.href.split('/').pop()
+
+
 startVue()
 
 
@@ -337,6 +340,7 @@ let vue = new Vue({
         this.getData('funds')
     },
     data: {
+        pw: pw,
         orderData: {
             side: '',
             first: 0,
@@ -369,7 +373,7 @@ let vue = new Vue({
             OFVOL: 'delta / trapped / divs / signals / IMBs / various volume profiles / session volume / dalton / vWAPs',
             LEVELS: 'Trend lines - reg / pf / local / patterns / Golden Pockets / MACRO - Dailys Weekly / Monthly / Pivots / Ranges / POCs',
             EMOTION: 'greed / fear / stress / focus',
-            REASONS: 'SL / TP / For and against',
+            REASON: 'SL / TP / For and against',
             RESULT: 'lesson / missed',
         },
         tradeHistory: {},
@@ -637,6 +641,7 @@ let vue = new Vue({
 
         },
         clearPrice: function () {
+            this.orderData.order = ''
             this.orderData.first = 0
         },
         clearOI: function () {
@@ -695,6 +700,7 @@ let vue = new Vue({
 
             $.ajax({
                 data : {
+                    pw: pw,
                     mode: mode,
                     side: this.orderData.side,
                     minutes: this.orderData.minutes,
@@ -742,6 +748,7 @@ let vue = new Vue({
 
             $.ajax({
                 data : {
+                    pw: pw,
                     mode: mode,
                     spread: this.limitData.spread,
                     price: this.limitData.price,
@@ -764,6 +771,7 @@ let vue = new Vue({
 
             $.ajax({
                 data : {
+                    pw: pw,
                     mode: true,
                     side: this.orderData.side,
                     first: this.orderData.first,
@@ -790,6 +798,7 @@ let vue = new Vue({
 
             $.ajax({
                 data : {
+                    pw: pw,
                     record : JSON.stringify(this.journalData),
                     imageArray : JSON.stringify(this.imageArray),
                     currentTrade : this.currentTrade,
@@ -813,6 +822,7 @@ let vue = new Vue({
 
             $.ajax({
                 data : {
+                    pw: pw,
                     b64data : this.image_b64,
                     imageArray : JSON.stringify(this.imageArray),
                     currentTrade : this.currentTrade,

@@ -10,14 +10,17 @@ try:
     AWS_ACCESS_KEY_ID = config.AWS_ACCESS_KEY_ID
     AWS_SECRET_ACCESS_KEY = config.AWS_SECRET_ACCESS_KEY
     SECRET_KEY = config.SECRET_KEY
+    PASSWORD = config.PASSWORD
     print('SUCCESS')
 except:
     print('EXCEPT')
     AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
     AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
     SECRET_KEY = os.environ['SECRET_KEY']
-    API_KEY = os.environ['API_KEY'] ,
+    API_KEY = os.environ['API_KEY']
     API_SECRET= os.environ['API_SECRET']
+    PASSWORD= os.environ['PASSWORD']
+
 
 
 session = inverse_perpetual.HTTP(

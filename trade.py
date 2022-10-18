@@ -1,5 +1,5 @@
-from flask import Flask, request, render_template, jsonify
-import config
+from flask import Flask, request, render_template, jsonify, abort
+import meta
 import json
 import time
 import base64
@@ -15,13 +15,15 @@ print(month)
 
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = config.SECRET_KEY
+app.config['SECRET_KEY'] = meta.SECRET_KEY
 app.config['DEBUG'] = True
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 
-@app.route('/')
-def home():
+@app.route('/<string:pw>')
+def home(pw):
+    if pw != meta.PASSWORD:
+        return abort
 
     key = 'tradeJournal_' + month + '.json'
     string = "static/" + key
@@ -35,6 +37,11 @@ def home():
 
 @app.route('/getData', methods=['POST'])
 def getData():
+    pw = request.form ['pw']
+
+    if pw != meta.PASSWORD:
+        return abort
+
     mode = request.form ['mode']
     side = request.form ['side']
     minutes = request.form ['minutes']
@@ -106,6 +113,11 @@ def getData():
 
 @app.route('/getTrade', methods=['POST'])
 def getTrade():
+    pw = request.form ['pw']
+
+    if pw != meta.PASSWORD:
+        return abort
+
     mode = request.form ['mode']
     spread = int(request.form ['spread'])
     price = int(request.form ['price'])
@@ -159,6 +171,11 @@ def getTrade():
 
 @app.route('/getOrder', methods=['POST'])
 def getOrder():
+    pw = request.form ['pw']
+
+    if pw != meta.PASSWORD:
+        return abort
+
     mode = request.form ['mode']
     side = request.form ['side']
     first = float(request.form ['first'])
@@ -201,6 +218,11 @@ def getOrder():
 
 @app.route('/recordTrade', methods=['POST'])
 def recordTrade():
+    pw = request.form ['pw']
+
+    if pw != meta.PASSWORD:
+        return abort
+
     record = request.form ['record']
     imageArray = request.form ['imageArray']
     currentTrade = request.form ['currentTrade']
@@ -235,6 +257,11 @@ def recordTrade():
 
 @app.route('/addImage', methods=['POST'])
 def addImage():
+    pw = request.form ['pw']
+
+    if pw != meta.PASSWORD:
+        return abort
+
     b64data = request.form ['b64data']
     imageArray = request.form ['imageArray']
     currentTrade = request.form ['currentTrade']
