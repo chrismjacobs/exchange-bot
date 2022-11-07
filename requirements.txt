@@ -13,4 +13,3 @@ Jinja2==3.1.1
 MarkupSafe==2.1.1
 Werkzeug==2.2.2
 s3transfer==0.6.0
-wtf==0.1

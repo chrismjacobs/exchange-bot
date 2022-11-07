@@ -6,6 +6,19 @@ import base64
 import boto3
 import datetime
 from meta import session, s3_resource
+from pybit import usdt_perpetual, inverse_perpetual
+
+session_unauth_USD = usdt_perpetual.HTTP(
+    endpoint="https://api.bybit.com"
+)
+session_unauth_USDT = inverse_perpetual.HTTP(
+    endpoint="https://api.bybit.com"
+)
+
+print(session_unauth_USD.open_interest(
+    symbol="BTCUSD",
+    period="5min"
+))
 
 currentDate = datetime.date.today()
 month = currentDate.strftime("%B")
@@ -20,19 +33,56 @@ app.config['DEBUG'] = True
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 
-@app.route('/<string:pw>')
+@app.route('/')
 def home(pw):
+
+
+    return 'trading desk'
+
+@app.route('/trade/<string:pw>')
+def trade(pw):
     if pw != meta.PASSWORD:
         return abort
 
+    print ('get MetaFile')
+    bucket = 'rekt-journal'
     key = 'tradeJournal_' + month + '.json'
-    string = "static/" + key
 
-    with open(string, "r") as f:
-        jload = json.load(f)
+    # with open('static/' + key, 'r') as json_file:
+    #     file_content = json_file
+
+    content_object = s3_resource.Object( bucket, key )
+    file_content = content_object.get()['Body'].read().decode('utf-8')
 
 
-    return render_template('tradingdesk.html', tradeJournal=json.dumps(jload))
+    return render_template('tradingdesk.html', tradeJournal=file_content)
+
+@app.route('/journal/<string:pw>')
+def journal(pw):
+    if pw != meta.PASSWORD:
+        return abort
+
+    mList = [
+        'October',
+        'November'
+    ]
+
+    bucket = 'rekt-journal'
+
+    jDict = {
+
+    }
+
+    for m in mList:
+
+        key = 'tradeJournal_' + m + '.json'
+        content_object = s3_resource.Object( bucket, key )
+        file_content = content_object.get()['Body'].read().decode('utf-8')
+
+        jDict[m] = json.loads(file_content)
+
+
+    return render_template('journaldesk.html', tradeJournal=json.dumps(jDict))
 
 
 @app.route('/getData', methods=['POST'])
@@ -54,27 +104,37 @@ def getData():
 
     print('SIDE: ', side, minutes, risk, fraction, stop, first)
 
-    latest = session.latest_information_for_symbol(symbol="BTCUSD")
+    latest = session_unauth_USD.latest_information_for_symbol(symbol="BTCUSD")
+    latest2 = session_unauth_USDT.latest_information_for_symbol(symbol="BTCUSDT")
     getBTC = latest['result'][0]
+    getBTC2 = latest2['result'][0]
     print('latest', latest)
-    print('open interest', getBTC['open_interest'], round(float(latest['time_now'])))
+    print('open interest', getBTC['open_interest'], getBTC2['open_interest'], round(float(latest['time_now'])))
 
-    oi = session.open_interest(symbol="BTCUSD", period="5min", limit=6)['result']
+    oi1 = session.open_interest(symbol="BTCUSD", period="5min", limit=6)['result']
+    oi2 = session.open_interest(symbol="BTCUSDT", period="5min", limit=6)['result']
     ls = session.long_short_ratio(symbol="BTCUSD", limit=1, period="5min")['result']
-    print('OI', oi, ls)
+    print('OI1\n', oi1, '\nOI2\n', oi2, ls)
 
-    oiDict = {
+    oiDict1 = {
         1 : getBTC['open_interest'],
-        2 : oi[0]['open_interest'],
-        3 : oi[1]['open_interest'],
-        4 : oi[2]['open_interest']
+        2 : oi1[0]['open_interest'],
+        3 : oi1[1]['open_interest'],
+        4 : oi1[2]['open_interest']
+    }
+
+    oiDict2 = {
+        1 : getBTC2['open_interest'],
+        2 : oi2[0]['open_interest'],
+        3 : oi2[1]['open_interest'],
+        4 : oi2[2]['open_interest']
     }
 
     if mode == 'first':
         price = float(getBTC['last_price'])
         return jsonify({'result' : price, 'mode' : mode })
     if mode == 'oiData':
-        return jsonify({'mode' : mode, 'oi' : json.dumps(oiDict), 'ls': json.dumps(ls[0])})
+        return jsonify({'mode' : mode, 'oi1' : json.dumps(oiDict1), 'oi2' : json.dumps(oiDict2), 'ls': json.dumps(ls[0])})
     elif mode == 'leverage':
 
         position = session.my_position(symbol="BTCUSD")['result']
@@ -199,7 +259,10 @@ def getOrder():
     if first == None or first == 0:
         first = price
 
-    for i in range(1, ladder+1):
+    start = 1
+    if ladder == 1:
+        start = 0
+    for i in range(start, ladder+1):
         if side == 'Buy':
             spreadArray.append(first - i*spread)
         else:
@@ -231,20 +294,21 @@ def recordTrade():
     bucket = 'rekt-journal'
     key = 'tradeJournal_' + month + '.json'
 
+    # with open('static/' + key, 'r') as json_file:
+    #     file_content = json_file
+    # print(key, json_file, type(file_content))
+    # jload = json.loads(file_content)
+
     content_object = s3_resource.Object( bucket, key )
     file_content = content_object.get()['Body'].read().decode('utf-8')
     jload = json.loads(file_content)
 
-    string = "static/" + key
-
-    # with open(string, "r") as f:
-    #     jload = json.load(f)
 
     jload[currentTrade] = {}
     jload[currentTrade]['record'] = json.loads(record)
     jload[currentTrade]['imageArray'] = json.loads(imageArray)
 
-    with open(string, 'w') as json_file:
+    with open('static/' + key, 'w') as json_file:
         json.dump(jload, json_file)
 
     jstring = json.dumps(jload)

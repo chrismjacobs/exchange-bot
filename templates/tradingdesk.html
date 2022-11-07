@@ -20,15 +20,34 @@
     <div class="content-section m-5" style="background: darkgrey">
         <div class="content-section" style="background:black; color:white">
             <h1> Trading Desk </h1>
-            [[report]]
-        </div>
+            <h3>  - Are you outside/edge of a range for the best trade? <input type="text" v-model="setup[1]"> </h3>
+            <h3>  - Are taking liquidity or becoming it? <input type="text" v-model="setup[2]"> </h3>
+            <h3>  - Are you on the wrong side of volatility? <input type="text" v-model="setup[4]"> </h3>
+            <h3>  - Have you monitored SPX for confluence? <input type="text" v-model="setup[5]"></h3>
+            <h3>  - Have you checked OI and Divergence? <input type="text" v-model="setup[6]"></h3>
+            <h3>  - Have you conisdered a better value target (think fees/bounce)? <input type="text" v-model="setup[3]"> </h3>
+            <h3>  - Do you know where a good place to flip is? <input type="text" v-model="setup[7]"></h3>
+            <h3 style="color:red">  - If you have rushed this, take a moment and redo </h3>
+
+            <audio id="xyz" src="https://rekt-journal.s3.ap-northeast-1.amazonaws.com/alert.mp3" style="display:none" controls preload="auto"></audio>
+
+        <h3> Trend Notes </h3>
+        <input type="text" v-model="notesTemp">
+        <button @click="addNote()" class="btn btn-secondary" type="button" id="button-addon1"> +</button>
+        <button @click="clearNotes()" class="btn btn-secondary" type="button" id="button-addon1">&#9746</button>
+        <template v-for="(item, key) in notesList" :key="key">
+            <h4> [[item]] </h4>
+        </template>
+
+    </div>
 
         <div class="row align-items-start m-2">
             <div class="col" :style=(getSideColor())>
 
-                <div class="input-group mb-3 mt-3">
-                    <button @click="getOrder()" class="btn btn-secondary" type="button" id="button-addon1">Order</button>
-                    <input type="text" class="form-control" v-model="orderData.order">
+                <div class=" mb-3 mt-3">
+                    <button @click="getOrder('limit')" class="btn btn-info" type="button" id="button-addon1">Order Limit</button>
+                    <button @click="getOrder('market')" class="btn btn-danger" type="button" id="button-addon1">Order Market</button>
+                    <br><input type="text" class="form-control" v-model="orderData.order">
                 </div>
 
                 <div class="input-group mb-3">
@@ -59,16 +78,8 @@
                     <input type="number" class="form-control" v-model="orderData.leverage">
                 </div>
 
-                <div class="m-3">
-                    CHECKLIST
-                    <br>
-                    <input class="form-check-input" type="checkbox" role="switch" name='tradecheck'> CVD divergence
-                    <br>
-                    <input class="form-check-input" type="checkbox" role="switch" name='tradecheck'> Open Interest
-                    <br>
-                    <input class="form-check-input" type="checkbox" role="switch" name='tradecheck'> The better target
-                    <br>
-                    <input class="form-check-input" type="checkbox" role="switch" name='tradecheck'> Consider the other direction               </div>
+
+
 
             </div>
             <div v-if="!mobile" class="col" style="background:lightgrey">
@@ -114,9 +125,12 @@
                     <button @click="oiTimer()" class="btn btn-secondary" type="button" id="button-addon1">OI</button>
                     <button @click="clearOI()" class="btn btn-secondary" type="button" id="button-addon1">&#9746</button>
                     Buy:[[buysellRatio.buy_ratio]]/Sell:[[buysellRatio.sell_ratio]] <br>
-                    <span :style="getOI(2)" class="text-white m-2"> 2 </span>  [[ Math.round(oiDiff[2]) ]] <br>
-                    <span :style="getOI(5)" class="text-white m-2"> 5 </span> [[ Math.round(oiDiff[5]) ]] <br>
-                    <span :style="getOI(15)" class="text-white m-2"> 15 </span> [[ Math.round(oiDiff[15]) ]] <br>
+                    <span :style="getOI(2, 1)" class="text-white m-2 rounded"> 2 </span>  [[ Math.round(oiDiff1[2]) ]] <br>
+                    <span :style="getOI(5, 1)" class="text-white m-2 rounded"> 5 </span> [[ Math.round(oiDiff1[5]) ]] <br>
+                    <span :style="getOI(15, 1)" class="text-white m-2 rounded"> 15 </span> [[ Math.round(oiDiff1[15]) ]] <br>
+                    <span :style="getOI(2, 2)" class="text-white m-2 rounded"> 2 </span>  [[ Math.round(oiDiff2[2]) ]] <br>
+                    <span :style="getOI(5, 2)" class="text-white m-2 rounded"> 5 </span> [[ Math.round(oiDiff2[5]) ]] <br>
+                    <span :style="getOI(15, 2)" class="text-white m-2 rounded"> 15 </span> [[ Math.round(oiDiff2[15]) ]] <br>
                 </div>
 
 
@@ -287,7 +301,6 @@
 
 
 
-
 </div> <!-- end vue app-->
 </main>
 
@@ -338,9 +351,22 @@ let vue = new Vue({
 
         this.getData('leverage', 0)
         this.getData('funds')
+
+        if (localStorage['notes']) {
+            this.notesList = JSON.parse(localStorage['notes'])
+        }
     },
     data: {
         pw: pw,
+        setup:{
+            1:'',
+            2:'',
+            3:'',
+            4:'',
+            5:'',
+            6:'',
+            7:''
+        },
         orderData: {
             side: '',
             first: 0,
@@ -390,18 +416,36 @@ let vue = new Vue({
         view: 1,
         btc: 0,
         edit: false,
-        openInterest : {},
+        openInterest1 : {},
+        openInterest2 : {},
         buysellRatio : {},
-        oiDiff: {
+        oiDiff1: {
             15 : 0,
             5 : 0,
             2 : 0
         },
+        oiDiff2: {
+            15 : 0,
+            5 : 0,
+            2 : 0
+        },
+        oiAlert: 200,
         oi_timer:  null,
         report: report,
-        mobile: mobile
+        mobile: mobile,
+        notesList: [],
+        notesTemp: ''
     },
     methods: {
+        addNote: function () {
+            this.notesList.push(this.notesTemp)
+            this.notesTemp = ''
+            localStorage.setItem('notes', JSON.stringify(this.notesList))
+        },
+        clearNotes: function () {
+            this.notesList = []
+            localStorage.setItem('notes', [])
+        },
         getSplit: function (x) {
             return x.split('/')
         },
@@ -515,25 +559,49 @@ let vue = new Vue({
             console.log('jRow', cl)
             return cl
         },
-        getOI: function (x) {
-            let c = 'blue'
-            let diff = this.oiDiff[x]
+        getOI: function (x, b) {
+            let styles = {
+                1 : {
+                    80 : 4000,
+                    5 : 200,
+                    c : 3200,
+                    p : 'blue',
+                    n : 'red'
+                },
+                2 : {
+                    80 : 500,
+                    5 : 10,
+                    c : 320,
+                    p : 'green',
+                    n : 'purple'
+                }
+            }
+
+            let c = styles[b]['p']
+            let diff
+            if (b == 1) {
+                diff = this.oiDiff1[x]
+            } else {
+                diff = this.oiDiff2[x]
+            }
 
             if (diff < 0) {
-                c = 'red'
+                c = styles[b]['n']
             }
             let w = Math.round(Math.abs(diff))/6
 
             let aDiff = Math.abs(diff)
 
-            if (aDiff > 4000) {
+
+
+            if (aDiff > styles[b][80]) {
                 w = 80
                 //console.log('80', diff, x)
-            } else if (aDiff < 200) {
+            } else if (aDiff < styles[b][5]) {
                 w = 5
                 //console.log('5', diff, x)
             } else {
-                w = Math.round((aDiff/3200)*80)
+                w = Math.round((aDiff/styles[b]['c'])*80)
                 //console.log('calc', diff, x)
             }
 
@@ -600,17 +668,26 @@ let vue = new Vue({
         getRR: function () {
 
             let OD = this.orderData
+            let profit_d
+            let profit_p
+            let rr
 
             let loss_d = Math.abs(OD.first - OD.stop)
             let loss_p = Math.round((Math.abs(OD.first - OD.stop)/OD.first)*10000)/100
-            let profit_d = Math.abs(OD.first - OD.profit)
-            let profit_p = Math.round((Math.abs(OD.first - OD.profit)/OD.first)*10000)/100
+            if (OD.profit == 0) {
+                profit_d = '-'
+                profit_p = '-'
+                rr = '-'
+            } else {
+                profit_d = Math.abs(OD.first - OD.profit)
+                profit_p = Math.round((Math.abs(OD.first - OD.profit)/OD.first)*10000)/100
+                rr = Math.round((profit_d/loss_d)*1000)/1000
+            }
 
-            let rr = Math.round((profit_d/loss_d)*1000)/1000
 
-            OD.rr = [ 'Stoploss ', loss_d + '$ ',
+            OD.rr = [ 'SL ', loss_d + '$ ',
                     ' ' + loss_p + '%',
-                    ' Takeprofit',
+                    ' TP',
                     ' ' + profit_d + '$',
                     ' ' + profit_p + '%' ,
                     ' ( ' + rr + ' )'
@@ -674,10 +751,17 @@ let vue = new Vue({
         },
         calcOI: function () {
             let f = 1000
-            let x = this.openInterest
-            this.oiDiff[15] = (x[1] - x[4])/f
-            this.oiDiff[5] = (x[1] - x[3])/f
-            this.oiDiff[2] = (x[1] - x[2])/f
+            let x = this.openInterest1
+            this.oiDiff1[15] = (x[1] - x[4])/f
+            this.oiDiff1[5] = (x[1] - x[3])/f
+            this.oiDiff1[2] = (x[1] - x[2])/f
+            this.oiAlert = (x[1] - x[2])/f
+
+            let y = this.openInterest2
+            this.oiDiff2[15] = (y[1] - y[4])
+            this.oiDiff2[5] = (y[1] - y[3])
+            this.oiDiff2[2] = (y[1] - y[2])
+            //this.oiAlert = (y[1] - y[2])/f
         },
         getData: function (mode, x) {
             console.log('getData', mode, x)
@@ -695,6 +779,7 @@ let vue = new Vue({
             } else if (x == 'Sell') {
                 this.orderData.side = 'Sell'
             }
+
 
             console.log('risk', this.orderData.risk)
 
@@ -726,13 +811,20 @@ let vue = new Vue({
                 } else if (data.mode == 'first') {
                     vue.orderData[data.mode] = data.result
                     vue.getData('oiData')
+                    if (vue.orderData.price != 0 && vue.orderData.stop !=0) {
+                        vue.getRR()
+                    }
                 } else if (data.mode == 'oiData') {
-                    vue.openInterest = JSON.parse(data.oi)
+                    vue.openInterest1 = JSON.parse(data.oi1)
+                    vue.openInterest2 = JSON.parse(data.oi2)
                     vue.buysellRatio = JSON.parse(data.ls)
                     vue.calcOI()
-                    console.log('oiData return', vue.openInterest, vue.buysellRatio)
+                    console.log('oiData return', vue.openInterest2, vue.buysellRatio)
                 } else {
                     vue.orderData[data.mode] = data.result
+                    if (vue.orderData.price != 0 && vue.orderData.stop !=0) {
+                        vue.getRR()
+                    }
                 }
                 if (vue.orderData.risk == 0) {
                     vue.orderData.risk = r
@@ -740,7 +832,7 @@ let vue = new Vue({
                 return data.result
             })
             .fail(function(){
-                  alert('error has occurred');
+                  alert('error has occurred gData');
             });
         },
         getTrade: function (mode) {
@@ -763,10 +855,31 @@ let vue = new Vue({
                 vue.limitData[data.mode] = data.result
             })
             .fail(function(){
-                  alert('error has occurred');
+                  alert('error has occurred getTrade');
             });
         },
         getOrder: function (mode) {
+            for (let x in vue.setup) {
+                if (vue.setup[x].length == 0) {
+                    alert('setup not complete')
+                    return false
+                }
+            }
+            if (this.orderData.stop == 0) {
+                alert('no stop set')
+                return false
+            } else if (Math.abs(this.orderData.stop-this.orderData.first) < 20) {
+                alert('stop is too close')
+                return false
+            }
+
+
+
+            if (mode == 'market') {
+                this.orderData.first = 0
+            }
+
+
             console.log('getOrder')
 
             $.ajax({
@@ -790,7 +903,7 @@ let vue = new Vue({
                 vue.orderData.order = data.result
             })
             .fail(function(){
-                  alert('error has occurred');
+                  alert('error has occurred getOrder');
             });
         },
         recordTrade: function () {
@@ -812,7 +925,7 @@ let vue = new Vue({
 
             })
             .fail(function(){
-                  alert('error has occurred');
+                  alert('error has occurred recordTrade');
             });
 
 
@@ -836,7 +949,7 @@ let vue = new Vue({
                 vue.imageArray = JSON.parse(data.result)
             })
             .fail(function(){
-                  alert('error has occurred');
+                  alert('error has occurred addImage');
             });
 
 
@@ -892,7 +1005,13 @@ let vue = new Vue({
                 frac = 0.95
             }
             this.orderData.fraction = frac
-      }
+        },
+        oiAlert: function () {
+            if(this.oiAlert < -800){
+                document.getElementById('xyz').play();
+                //alert("Thank you!");
+            }
+        }
     }
 
 })// end NEW VUE
