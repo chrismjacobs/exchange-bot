@@ -25,19 +25,33 @@
             <h3>  - Are you on the wrong side of volatility? <input type="text" v-model="setup[4]"> </h3>
             <h3>  - Have you monitored SPX for confluence? <input type="text" v-model="setup[5]"></h3>
             <h3>  - Have you checked OI and Divergence? <input type="text" v-model="setup[6]"></h3>
-            <h3>  - Have you conisdered a better value target (think fees/bounce)? <input type="text" v-model="setup[3]"> </h3>
+            <h3>  - Have you conisdered a better value target (SFP/GP/RangeLow)? <input type="text" v-model="setup[3]"> </h3>
             <h3>  - Do you know where a good place to flip is? <input type="text" v-model="setup[7]"></h3>
             <h3 style="color:red">  - If you have rushed this, take a moment and redo </h3>
 
             <audio id="xyz" src="https://rekt-journal.s3.ap-northeast-1.amazonaws.com/alert.mp3" style="display:none" controls preload="auto"></audio>
 
-        <h3> Trend Notes </h3>
-        <input type="text" v-model="notesTemp">
-        <button @click="addNote()" class="btn btn-secondary" type="button" id="button-addon1"> +</button>
-        <button @click="clearNotes()" class="btn btn-secondary" type="button" id="button-addon1">&#9746</button>
-        <template v-for="(item, key) in notesList" :key="key">
-            <h4> [[item]] </h4>
-        </template>
+    <div class="row align-items-start m-2">
+        <div class="col-6" display="background:firebrick">
+            <h3> Bearish Case </h3>
+            <input type="text" v-model="bearNotesTemp">
+            <button @click="addNote('bear')" class="btn btn-secondary" type="button" id="button-addon1"> +</button>
+            <button @click="clearNotes('bear')" class="btn btn-secondary" type="button" id="button-addon1">&#9746</button>
+                <template v-for="(item, key) in bearNotesList" :key="key">
+                    <h4> [[item]] </h4>
+                </template>
+        </div>
+        <div class="col-6" display="background:darkgreen">
+            <h3> Bullish Case </h3>
+            <input type="text" v-model="bullNotesTemp">
+            <button @click="addNote('bull')" class="btn btn-secondary" type="button" id="button-addon1"> +</button>
+            <button @click="clearNotes('bull')" class="btn btn-secondary" type="button" id="button-addon1">&#9746</button>
+                <template v-for="(item, key) in bullNotesList" :key="key">
+                    <h4 v-if="item != ''" @click="item = ''"> [[item]] </h4>
+                </template>
+        </div>
+    </div>
+
 
     </div>
 
@@ -124,6 +138,7 @@
                 <div class="mt-3 mb-3">
                     <button @click="oiTimer()" class="btn btn-secondary" type="button" id="button-addon1">OI</button>
                     <button @click="clearOI()" class="btn btn-secondary" type="button" id="button-addon1">&#9746</button>
+                    <button @click="audioToggle = !audioToggle" class="btn btn-secondary" type="button" id="button-addon1">[[audioToggle]]</button>
                     Buy:[[buysellRatio.buy_ratio]]/Sell:[[buysellRatio.sell_ratio]] <br>
                     <span :style="getOI(2, 1)" class="text-white m-2 rounded"> 2 </span>  [[ Math.round(oiDiff1[2]) ]] <br>
                     <span :style="getOI(5, 1)" class="text-white m-2 rounded"> 5 </span> [[ Math.round(oiDiff1[5]) ]] <br>
@@ -352,8 +367,11 @@ let vue = new Vue({
         this.getData('leverage', 0)
         this.getData('funds')
 
-        if (localStorage['notes']) {
-            this.notesList = JSON.parse(localStorage['notes'])
+        if (localStorage['bearNotes']) {
+            this.bearNotesList = JSON.parse(localStorage['bearNotes'])
+        }
+        if (localStorage['bullNotes']) {
+            this.bullNotesList = JSON.parse(localStorage['bullNotes'])
         }
     },
     data: {
@@ -431,20 +449,34 @@ let vue = new Vue({
         },
         oiAlert: 200,
         oi_timer:  null,
+        audioToggle: true,
         report: report,
         mobile: mobile,
-        notesList: [],
-        notesTemp: ''
+        bearNotesList: [],
+        bullNotesList: [],
+        bearNotesTemp: '',
+        bullNotesTemp: ''
     },
     methods: {
-        addNote: function () {
-            this.notesList.push(this.notesTemp)
-            this.notesTemp = ''
-            localStorage.setItem('notes', JSON.stringify(this.notesList))
+        addNote: function (side) {
+            if (side == 'bear') {
+                this.bearNotesList.push(this.bearNotesTemp)
+                this.bearNotesTemp = ''
+                localStorage.setItem('bearNotes', JSON.stringify(this.bearNotesList))
+            } else {
+                this.bullNotesList.push(this.bullNotesTemp)
+                this.bullNotesTemp = ''
+                localStorage.setItem('bullNotes', JSON.stringify(this.bullNotesList))
+            }
         },
-        clearNotes: function () {
-            this.notesList = []
-            localStorage.setItem('notes', [])
+        clearNotes: function (side) {
+            if (side == 'bear') {
+                this.bearNotesList = []
+                localStorage.setItem('bearNotes', [])
+            } else {
+                this.bullNotesList = []
+                localStorage.setItem('bullNotes', [])
+            }
         },
         getSplit: function (x) {
             return x.split('/')
@@ -1008,7 +1040,9 @@ let vue = new Vue({
         },
         oiAlert: function () {
             if(this.oiAlert < -800){
-                document.getElementById('xyz').play();
+                if (this.audioToggle) {
+                    document.getElementById('xyz').play();
+                }
                 //alert("Thank you!");
             }
         }
