@@ -34,9 +34,18 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 
 @app.route('/')
-def home(pw):
+def home():
+    # print ('get MetaFile')
+    # bucket = 'rekt-journal'
+    # key = 'tradeJournal_' + month + '.json'
 
+    # # with open('static/' + key, 'r') as json_file:
+    # #     file_content = json_file
 
+    # content_object = s3_resource.Object( bucket, key )
+    # print(content_object)
+    # file_content = content_object.get()['Body'].read().decode('utf-8')
+    # # print(file_content)
     return 'trading desk'
 
 @app.route('/trade/<string:pw>')
@@ -52,7 +61,11 @@ def trade(pw):
     #     file_content = json_file
 
     content_object = s3_resource.Object( bucket, key )
-    file_content = content_object.get()['Body'].read().decode('utf-8')
+    try:
+        file_content = content_object.get()['Body'].read().decode('utf-8')
+    except:
+        print('BOTO ERROR')
+        file_content = json.dumps({})
 
 
     return render_template('tradingdesk.html', tradeJournal=file_content)
