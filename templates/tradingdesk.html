@@ -20,13 +20,11 @@
     <div class="content-section m-5" style="background: darkgrey">
         <div class="content-section" style="background:black; color:white">
             <h1> Trading Desk </h1>
-            <h3>  - Are you outside/edge of a range for the best trade? <input type="text" v-model="setup[1]"> </h3>
-            <h3>  - Are taking liquidity or becoming it? <input type="text" v-model="setup[2]"> </h3>
-            <h3>  - Are you on the wrong side of volatility? <input type="text" v-model="setup[4]"> </h3>
-            <h3>  - Have you monitored SPX for confluence? <input type="text" v-model="setup[5]"></h3>
-            <h3>  - Have you checked OI and Divergence? <input type="text" v-model="setup[6]"></h3>
-            <h3>  - Have you considered a better value target (SFP/GP/RangeLow)? <input type="text" v-model="setup[3]"> </h3>
-            <h3>  - Do you know where a good place to flip is? <input type="text" v-model="setup[7]"></h3>
+            <h3>  - 3 Trade Plus (GP/SFP/key level/range/OF trigger/fill target/)? <input type="text" v-model="setup[1]"> </h3>
+            <h3>  - Did you look for liquidity levels and Orderflow Divergence<input type="text" v-model="setup[2]"> </h3>
+            <h3>  - Did you check volatilty? <input type="text" v-model="setup[3]"> </h3>
+            <h3>  - Have you monitored SPX for confluence? <input type="text" v-model="setup[4]"></h3>
+            <h3>  - Have you considered a better value target or a place to flip? <input type="text" v-model="setup[5]"> </h3>
             <h3 style="color:red">  - If you have rushed this, take a moment and redo </h3>
 
             <audio id="xyz" src="https://rekt-journal.s3.ap-northeast-1.amazonaws.com/alert.mp3" style="display:none" controls preload="auto"></audio>
@@ -381,9 +379,7 @@ let vue = new Vue({
             2:'',
             3:'',
             4:'',
-            5:'',
-            6:'',
-            7:''
+            5:''
         },
         orderData: {
             side: '',
