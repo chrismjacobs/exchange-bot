@@ -1,12 +1,8 @@
-from flask import Flask, request, render_template, jsonify, abort
-import meta
 import json
 import time
 import base64
 import datetime
 from meta import session, s3_resource
-from pybit import usdt_perpetual, inverse_perpetual
-from app import app
 
 
 def setLeverage(first, stop, risk, fraction, leverage):
