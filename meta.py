@@ -25,6 +25,7 @@ except:
     API_KEY = os.environ['API_KEY']
     API_SECRET= os.environ['API_SECRET']
     PASSWORD= os.environ['PASSWORD']
+    REDIS_URL= os.environ['REDIS_URL']
 
 
 
@@ -57,18 +58,12 @@ session_unauth_USDT = inverse_perpetual.HTTP(
 
 
 if REDIS_URL:
-    # r = redis.from_url(REDIS_URL)
+    r = redis.from_url(REDIS_URL)
 
-    r = redis.Redis(
-        host = 'redis-12011.c54.ap-northeast-1-2.ec2.cloud.redislabs.com',
-        port = 12011,
-        password = REDIS_PASSWORD,
-        decode_responses = True # get python friendly format
-    )
     # r = redis.Redis(
-    #     host = 'rediss://red-cdrfbr5a49909bjqjeag:G3E4V0POJj68swbvW7ToMwxDpyX2adt5@singapore-redis.render.com:6379',
-    #     port = 6379,
-    #     password = "G3E4V0POJj68swbvW7ToMwxDpyX2adt5",
+    #     host = 'redis-12011.c54.ap-northeast-1-2.ec2.cloud.redislabs.com',
+    #     port = 12011,
+    #     password = REDIS_PASSWORD,
     #     decode_responses = True # get python friendly format
     # )
 

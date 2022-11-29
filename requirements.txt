@@ -11,6 +11,6 @@ Flask==2.0.3
 itsdangerous==2.1.2
 Jinja2==3.1.1
 MarkupSafe==2.1.1
-redis==3.3.11
+redis==4.3.5
 Werkzeug==2.2.2
 s3transfer==0.6.0
