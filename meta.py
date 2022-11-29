@@ -4,6 +4,8 @@ import os
 from pybit import inverse_perpetual, usdt_perpetual
 import redis
 
+
+
 try:
     import config
     API_KEY = config.API_KEY
@@ -56,11 +58,18 @@ session_unauth_USDT = inverse_perpetual.HTTP(
 
 if REDIS_URL:
     # r = redis.from_url(REDIS_URL)
+
     r = redis.Redis(
         host = 'redis-12011.c54.ap-northeast-1-2.ec2.cloud.redislabs.com',
         port = 12011,
         password = REDIS_PASSWORD,
-        decode_responses = True # get python freiendlt format
+        decode_responses = True # get python friendly format
     )
+    # r = redis.Redis(
+    #     host = 'rediss://red-cdrfbr5a49909bjqjeag:G3E4V0POJj68swbvW7ToMwxDpyX2adt5@singapore-redis.render.com:6379',
+    #     port = 6379,
+    #     password = "G3E4V0POJj68swbvW7ToMwxDpyX2adt5",
+    #     decode_responses = True # get python friendly format
+    # )
 
     print('REDIS', r)
