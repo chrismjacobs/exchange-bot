@@ -17,26 +17,54 @@ def updateStream(vol, oi, price, time):
 def handle_trade_message(msg):
     # print(msg['data'])
     block = 1000000
-    # deltaTotal = json.loads(r.get('deltaTotal'))
+
     delta = json.loads(r.get('delta')) ## reset after each volume block
 
     newTradeList = []
+    newTradeListBlock = []
     tradeListTotal = 0
 
     for t in delta['tradeList']:
         tradeListTotal += t['size']
 
 
+
+
     for x in msg['data']:
+
         if tradeListTotal + x['size'] <= block:
             delta['tradeList'].append( { 'side' : x['side'] , 'size' : x['size'] , 'time' : x['trade_time_ms']} )
         elif len(newTradeList) == 0:
+
             lefttoFill = block - tradeListTotal
             carryOver = x['size'] - lefttoFill
+
             delta['tradeList'].append( { 'side' : x['side'] , 'size' : lefttoFill, 'time' : x['trade_time_ms']} )
-            newTradeList.append({ 'side' : x['side'] , 'size' : carryOver, 'time' : x['trade_time_ms']} )
+
+            if tradeListTotal + x['size'] > block*2:
+                # deal with extra large block fills
+                buyCount = 0
+                sellCount = 0
+                if x['side'] == 'Buy':
+                    buyCount = block
+                else:
+                    sellCount = block
+                newTradeListBlock.append({
+                                'time' : '',  'close' : '',
+                                'buys' : buyCount,
+                                'sells' : sellCount,
+                                'delta' : buyCount - sellCount,
+                                'total' : buyCount + sellCount,
+                                'oi': '',
+                                'vol' : ''
+                            } )
+                newTradeList.append({ 'side' : x['side'] , 'size' : x['size'] - block - lefttoFill, 'time' : x['trade_time_ms']} )
+            else:
+                newTradeList.append({ 'side' : x['side'] , 'size' : carryOver, 'time' : x['trade_time_ms']} )
         else:
+            # what if newTradeList exceeds block???
             newTradeList.append({ 'side' : x['side'] , 'size' : x['size'], 'time' : x['trade_time_ms']} )
+
 
     if len(newTradeList) > 0:
         stream = json.loads(r.get('stream'))
@@ -65,7 +93,11 @@ def handle_trade_message(msg):
             'vol' : vol
         }
 
+
         delta['flow'][len(delta['flow']) + 1] = newCandle
+
+        if len(newTradeListBlock) > 0:
+            delta['flow'][len(delta['flow']) + 1] = newTradeListBlock[0]
 
         delta['tradeList'] = newTradeList
 
