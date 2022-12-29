@@ -3,7 +3,7 @@ import json
 import time
 import base64
 import datetime
-from meta import session, s3_resource, session_unauth_USD, session_unauth_USDT, r
+from meta import session, s3_resource, session_unauth_USD, session_unauth_USDT, SECRET_KEY
 from pybit import usdt_perpetual, inverse_perpetual
 from function import *
 
@@ -17,7 +17,7 @@ print(month)
 
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = meta.SECRET_KEY
+app.config['SECRET_KEY'] = SECRET_KEY
 app.config['DEBUG'] = True
 
 
@@ -370,7 +370,7 @@ def runStream():
 
     return 'Stream Running'
 
-from bot import *
+# from bot import *
 
 
 if __name__ == '__main__':
