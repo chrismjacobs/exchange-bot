@@ -897,6 +897,11 @@ let vue = new Vue({
                 alert('no stop set')
                 return false
             } else if (Math.abs(this.orderData.stop-this.orderData.first) < 20) {
+                this.orderData.stop = this.orderData.first - 21
+                if (this.orderData.side == 'Buy') {
+                    this.orderData.stop =  this.orderData.first + 21
+                }
+
                 alert('stop is too close')
                 return false
             }

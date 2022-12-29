@@ -4,7 +4,7 @@ import os
 from pybit import inverse_perpetual, usdt_perpetual
 import redis
 
-
+LOCAL = False
 
 try:
     import config
@@ -15,7 +15,7 @@ try:
     SECRET_KEY = config.SECRET_KEY
     PASSWORD = config.PASSWORD
     REDIS_URL = config.REDIS_URL
-    REDIS_PASSWORD = config.REDIS_PASSWORD
+    LOCAL = True
     print('SUCCESS')
 except:
     print('EXCEPTION')
@@ -58,8 +58,10 @@ session_unauth_USDT = inverse_perpetual.HTTP(
 
 
 if REDIS_URL:
-    r = redis.from_url(REDIS_URL)
-
+    if LOCAL:
+        r = redis.from_url(REDIS_URL, ssl_cert_reqs=None, decode_responses=True)
+    else:
+        r = redis.from_url(REDIS_URL)
     # r = redis.Redis(
     #     host = 'redis-12011.c54.ap-northeast-1-2.ec2.cloud.redislabs.com',
     #     port = 12011,

@@ -1,5 +1,4 @@
 from flask import Flask, request, render_template, jsonify, abort
-import meta
 import json
 import time
 import base64
@@ -20,7 +19,6 @@ print(month)
 app = Flask(__name__)
 app.config['SECRET_KEY'] = meta.SECRET_KEY
 app.config['DEBUG'] = True
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 
 @app.route('/')
@@ -31,7 +29,6 @@ def home():
 @app.route('/orderflow')
 def orderflow():
 
-
     return render_template('orderflow.html')
 
 @app.route('/getOF', methods=['POST'])
@@ -41,12 +38,18 @@ def getOF():
     # if pw != meta.PASSWORD:
     #     return abort
 
-    deltaTotal = r.get('deltaTotal')
-    delta = r.get('delta')
+    volumeblocks = r.get('blockflow')
+    timeblocks = r.get('timeblocks')
     stream = r.get('stream')
+    tradeList = r.get('tradeList')
 
 
-    return jsonify({'deltaTotal' : deltaTotal, 'delta' : delta, 'stream' : stream})
+    return jsonify({
+        'volumeblocks' : volumeblocks,
+        'stream' : stream,
+        'tradeList' : tradeList,
+        'timeblocks' : timeblocks
+    })
 
 @app.route('/trade/<string:pw>')
 def trade(pw):
