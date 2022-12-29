@@ -3,7 +3,7 @@ import json
 import time
 import base64
 import datetime
-from meta import session, s3_resource, session_unauth_USD, session_unauth_USDT, SECRET_KEY
+from meta import session, s3_resource, session_unauth_USD, session_unauth_USDT, SECRET_KEY, PASSWORD
 from pybit import usdt_perpetual, inverse_perpetual
 from function import *
 
@@ -31,29 +31,10 @@ def orderflow():
 
     return render_template('orderflow.html')
 
-@app.route('/getOF', methods=['POST'])
-def getOF():
-    # pw = request.form ['pw']
-
-    # if pw != meta.PASSWORD:
-    #     return abort
-
-    volumeblocks = r.get('blockflow')
-    timeblocks = r.get('timeblocks')
-    stream = r.get('stream')
-    tradeList = r.get('tradeList')
-
-
-    return jsonify({
-        'volumeblocks' : volumeblocks,
-        'stream' : stream,
-        'tradeList' : tradeList,
-        'timeblocks' : timeblocks
-    })
 
 @app.route('/trade/<string:pw>')
 def trade(pw):
-    if pw != meta.PASSWORD:
+    if pw != PASSWORD:
         return abort
 
     print ('get MetaFile')
@@ -75,7 +56,7 @@ def trade(pw):
 
 @app.route('/journal/<string:pw>')
 def journal(pw):
-    if pw != meta.PASSWORD:
+    if pw != PASSWORD:
         return abort
 
     mList = [
@@ -107,7 +88,7 @@ def journal(pw):
 def getData():
     pw = request.form ['pw']
 
-    if pw != meta.PASSWORD:
+    if pw != PASSWORD:
         return abort
 
     mode = request.form ['mode']
@@ -193,7 +174,7 @@ def getData():
 def getTrade():
     pw = request.form ['pw']
 
-    if pw != meta.PASSWORD:
+    if pw != PASSWORD:
         return abort
 
     mode = request.form ['mode']
@@ -251,7 +232,7 @@ def getTrade():
 def getOrder():
     pw = request.form ['pw']
 
-    if pw != meta.PASSWORD:
+    if pw != PASSWORD:
         return abort
 
     mode = request.form ['mode']
@@ -300,7 +281,7 @@ def getOrder():
 def recordTrade():
     pw = request.form ['pw']
 
-    if pw != meta.PASSWORD:
+    if pw != PASSWORD:
         return abort
 
     record = request.form ['record']
@@ -340,7 +321,7 @@ def recordTrade():
 def addImage():
     pw = request.form ['pw']
 
-    if pw != meta.PASSWORD:
+    if pw != PASSWORD:
         return abort
 
     b64data = request.form ['b64data']
