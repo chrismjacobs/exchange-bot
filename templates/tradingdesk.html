@@ -17,44 +17,42 @@
 <div id="vue-app">
 
 
-    <div class="content-section m-5" style="background: darkgrey">
+    <div :class="getMargin()" style="background: darkgrey">
+
         <div class="content-section" style="background:black; color:white">
             <h1> Trading Desk </h1>
-            <h3>  - 3 Trade Plus (GP/SFP/key level/range/OF trigger/fill target/)? <input type="text" v-model="setup[1]"> </h3>
-            <h3>  - What is Order Flow doing? (divergence, OI, liquidity)?<input type="text" v-model="setup[2]"> </h3>
-            <h3>  - How is volatility and momentum? <input type="text" v-model="setup[3]"> </h3>
-            <h3>  - Is there any SPX confluence? <input type="text" v-model="setup[4]"></h3>
-            <h3>  - Where is a better value target or a place to flip? <input type="text" v-model="setup[5]"> </h3>
-            <h3 style="color:red">  - If you have rushed this, take a moment and redo </h3>
+            <h4>  - 3 Trade Plus (GP/SFP/key level/range/OF trigger/fill target/)? <input type="text" v-model="setup[1]"> </h4>
+            <h4>  - What is Order Flow doing? (divergence, OI, liquidity)?<input type="text" v-model="setup[2]"> </h4>
+            <h4>  - Have you checked volatility/momentum/SPX? <input type="text" v-model="setup[3]"> </h4>
+            <h4>  - If the trade goes wrong what will you do? (flip/wait/give up?) <input type="text" v-model="setup[4]"> </h4>
+            <h4 style="color:red">  - If you have rushed this, take a moment and redo </h4>
 
             <audio id="xyz" src="https://rekt-journal.s3.ap-northeast-1.amazonaws.com/alert.mp3" style="display:none" controls preload="auto"></audio>
 
-    <div class="row align-items-start m-2">
-        <div class="col-6" display="background:firebrick">
-            <h3> Bearish Case </h3>
-            <input type="text" v-model="bearNotesTemp">
-            <button @click="addNote('bear')" class="btn btn-secondary" type="button" id="button-addon1"> +</button>
-            <button @click="clearNotes('bear')" class="btn btn-secondary" type="button" id="button-addon1">&#9746</button>
-                <template v-for="(item, key) in bearNotesList" :key="key">
-                    <h4> [[item]] </h4>
-                </template>
+            <div v-if="!mobile" class="row align-items-start m-1">
+                <div class="col-6" display="background:firebrick">
+                    <h4> Bearish Case </h4>
+                    <input type="text" v-model="bearNotesTemp">
+                    <button @click="addNote('bear')" class="btn btn-secondary" type="button" id="button-addon1"> +</button>
+                    <button @click="clearNotes('bear')" class="btn btn-secondary" type="button" id="button-addon1">&#9746</button>
+                        <template v-for="(item, key) in bearNotesList" :key="key">
+                            <h4> [[item]] </h4>
+                        </template>
+                </div>
+                <div class="col-6" display="background:darkgreen">
+                    <h4> Bullish Case </h4>
+                    <input type="text" v-model="bullNotesTemp">
+                    <button @click="addNote('bull')" class="btn btn-secondary" type="button" id="button-addon1"> +</button>
+                    <button @click="clearNotes('bull')" class="btn btn-secondary" type="button" id="button-addon1">&#9746</button>
+                        <template v-for="(item, key) in bullNotesList" :key="key">
+                            <h4 v-if="item != ''" @click="item = ''"> [[item]] </h4>
+                        </template>
+                </div>
+            </div>
         </div>
-        <div class="col-6" display="background:darkgreen">
-            <h3> Bullish Case </h3>
-            <input type="text" v-model="bullNotesTemp">
-            <button @click="addNote('bull')" class="btn btn-secondary" type="button" id="button-addon1"> +</button>
-            <button @click="clearNotes('bull')" class="btn btn-secondary" type="button" id="button-addon1">&#9746</button>
-                <template v-for="(item, key) in bullNotesList" :key="key">
-                    <h4 v-if="item != ''" @click="item = ''"> [[item]] </h4>
-                </template>
-        </div>
-    </div>
 
-
-    </div>
-
-        <div class="row align-items-start m-2">
-            <div class="col" :style=(getSideColor())>
+        <div :class="getTradeDiv()">
+            <div class="col-6" :style="getSideColor()">
 
                 <div class=" mb-3 mt-3">
                     <button @click="getOrder('limit')" class="btn btn-info" type="button" id="button-addon1">Order Limit</button>
@@ -79,9 +77,9 @@
                     <input type="number" class="form-control" v-model="orderData.profit">
                 </div>
 
-                <div class="input-group mb-3">
-                    <button @click="getRR()" class="btn btn-secondary" type="button" id="button-addon1">RR: </button>
-                    <input type="text" class="form-control" v-model="orderData.rr">
+                <div class=" mb-3" style="background:white" >
+                    <button @click="getRR()" class="btn btn-secondary" type="button" id="button-addon1">RR: </button>  <span v-if="mobile"> <br> </span>
+                    <span v-for="(item, key) in orderData.rr"> [[key]] [[item]] &nbsp </span>
                 </div>
 
                 <div class="input-group mb-3">
@@ -90,41 +88,37 @@
                     <input type="number" class="form-control" v-model="orderData.leverage">
                 </div>
 
-
-
-
             </div>
-            <div v-if="!mobile" class="col" style="background:lightgrey">
 
-                <div class="m-3">
-                </div>
+            <div class="col-6" style="background:lightgrey">
 
-                <div class="input-group mb-3">
+                <div class="input-group mb-3 mt-2">
                     <button @click="setTime(5)" class="btn btn-secondary" type="button" id="button-addon1">&#128337 &#8593</button>
-                    <button @click="setTime(-5)" class="btn btn-secondary" type="button" id="button-addon1">&#128337 &#8595</button>
+                    <button @click="setTime(-5)" class="btn btn-secondary" type="button" id="button-addon1">&#8595</button>
                     <input type="number" class="form-control" v-model="orderData.minutes">
                 </div>
 
                 <div class="input-group mb-3">
                     <button @click="setLadder(1)" class="btn btn-secondary" type="button" id="button-addon1">Ladder &#8593</button>
-                    <button @click="setLadder(-1)" class="btn btn-secondary" type="button" id="button-addon1">Ladder &#8595</button>
+                    <button @click="setLadder(-1)" class="btn btn-secondary" type="button" id="button-addon1">&#8595</button>
                     <input type="number" class="form-control" v-model="orderData.ladder">
                 </div>
 
                 <div class="input-group mb-3">
-                    <button class="btn btn-secondary" type="button" id="button-addon1">Spread</button>
+                    <button @click="setSpread(0.5)" class="btn btn-secondary" type="button" id="button-addon1">Spread &#8593</button>
+                    <button @click="setSpread(-0.5)" class="btn btn-secondary" type="button" id="button-addon1">&#8595</button>
                     <input type="number" class="form-control" v-model="orderData.spread">
                 </div>
 
                 <div class="input-group mb-3">
                     <button @click="setRisk(0.1)" class="btn btn-secondary" type="button" id="button-addon1">Risk &#8593</button>
-                    <button @click="setRisk(-0.1)" class="btn btn-secondary" type="button" id="button-addon1">Risk &#8595</button>
+                    <button @click="setRisk(-0.1)" class="btn btn-secondary" type="button" id="button-addon1">&#8595</button>
                     <input type="number" class="form-control" v-model="orderData.risk">
                 </div>
 
                 <div class="input-group mb-3">
-                    <button @click="setFraction(0.10)" class="btn btn-secondary" type="button" id="button-addon1">Frac &#8593</button>
-                    <button @click="setFraction(-0.10)" class="btn btn-secondary" type="button" id="button-addon1">Frac &#8595</button>
+                    <button @click="setFraction(0.1)" class="btn btn-secondary" type="button" id="button-addon1">Frac &#8593</button>
+                    <button @click="setFraction(-0.1)" class="btn btn-secondary" type="button" id="button-addon1">&#8595</button>
                     <input type="number" class="form-control" v-model="orderData.fraction">
                 </div>
 
@@ -133,7 +127,18 @@
                     <input type="number" class="form-control" v-model="btc">
                 </div>
 
-                <div class="mt-3 mb-3">
+                <div class="input-group mb-3">
+                    <button @click="getTrade('size')" class="btn btn-secondary" type="button" id="button-addon1">Size</button>
+                    <button @click="getTrade('cancel')" class="btn btn-secondary" type="button" id="button-addon1">Cancel</button>
+                    <br>
+                    <input type="text" class="form-control" v-model="limitData.action">
+                </div>
+
+
+            </div>
+
+            <div v-if="!mobile" class="col" style="background:orange; display:none">
+                <div class="mt-3 mb-3" style="display:none">
                     <button @click="oiTimer()" class="btn btn-secondary" type="button" id="button-addon1">OI</button>
                     <button @click="clearOI()" class="btn btn-secondary" type="button" id="button-addon1">&#9746</button>
                     <button @click="audioToggle = !audioToggle" class="btn btn-secondary" type="button" id="button-addon1">[[audioToggle]]</button>
@@ -144,13 +149,6 @@
                     <span :style="getOI(2, 2)" class="text-white m-2 rounded"> 2 </span>  [[ Math.round(oiDiff2[2]) ]] <br>
                     <span :style="getOI(5, 2)" class="text-white m-2 rounded"> 5 </span> [[ Math.round(oiDiff2[5]) ]] <br>
                     <span :style="getOI(15, 2)" class="text-white m-2 rounded"> 15 </span> [[ Math.round(oiDiff2[15]) ]] <br>
-                </div>
-
-
-            </div>
-            <div v-if="!mobile" class="col" style="background:orange">
-                <div class="input-group mb-5">
-
                 </div>
 
                 <div class="input-group mb-3">
@@ -174,8 +172,8 @@
                         <input type="number" class="form-control" v-model="limitData.spread">
                     </div>
                     <div class="input-group mb-3">
-                        <button @click="setLimitFraction(0.05)" class="btn btn-secondary" type="button" id="button-addon1">% &#8593</button>
-                        <button @click="setLimitFraction(-0.05)" class="btn btn-secondary" type="button" id="button-addon1">% &#8595</button>
+                        <button @click="setLimitFraction(0.1)" class="btn btn-secondary" type="button" id="button-addon1">% &#8593</button>
+                        <button @click="setLimitFraction(-0.1)" class="btn btn-secondary" type="button" id="button-addon1">% &#8595</button>
                         <input type="number" class="form-control" v-model="limitData.fraction">
                     </div>
 
@@ -196,7 +194,7 @@
 
             </div>
 
-          </div>
+        </div>
 
 
 
@@ -378,8 +376,7 @@ let vue = new Vue({
             1:'',
             2:'',
             3:'',
-            4:'',
-            5:''
+            4:''
         },
         orderData: {
             side: '',
@@ -387,12 +384,12 @@ let vue = new Vue({
             risk: 0.7,
             spread: 0.5,
             ladder: 2,
-            fraction: 0.95,
+            fraction: 0.9,
             minutes: 10,
             stop: 0,
             leverage: 2,
             profit: 0,
-            rr: 0,
+            rr: {},
             funds: 0,
             order: ''
         },
@@ -454,6 +451,20 @@ let vue = new Vue({
         bullNotesTemp: ''
     },
     methods: {
+        getMargin: function () {
+            if (this.mobile) {
+                return "content-section"
+            } else {
+                return "content-section m-5"
+            }
+        },
+        getTradeDiv: function () {
+            if (this.mobile) {
+                return "row align-items-start m-0"
+            } else {
+                return "row align-items-start m-1"
+            }
+        },
         addNote: function (side) {
             if (side == 'bear') {
                 this.bearNotesList.push(this.bearNotesTemp)
@@ -713,13 +724,13 @@ let vue = new Vue({
             }
 
 
-            OD.rr = [ 'SL ', loss_d + '$ ',
-                    ' ' + loss_p + '%',
-                    ' TP',
-                    ' ' + profit_d + '$',
-                    ' ' + profit_p + '%' ,
-                    ' ( ' + rr + ' )'
-                ]
+            OD.rr = { 'SL: ' : loss_d + '$ ',
+                      'S% ' : loss_p,
+                      'TP: ' : profit_d + '$',
+                      'L% ' : profit_p,
+                      'RR ' : '( ' + rr + ' )'
+                    }
+
             //console.log(OD.rr)
         },
         getTP: function () {
@@ -759,23 +770,28 @@ let vue = new Vue({
             this.limitData.spread += n
         },
         setLadder: function (n) {
-            this.orderData.ladder += n
+            newNumber = this.orderData.ladder + n
+            this.orderData.ladder = Math.round(newNumber * 10) / 10
         },
         setRisk: function (n) {
-            this.orderData.risk += n
+            newNumber = this.orderData.risk + n
+            this.orderData.risk = Math.round(newNumber * 10) / 10
+        },
+        setSpread: function (n) {
+            newNumber = this.orderData.spread + n
+            this.orderData.spread = Math.round(newNumber * 10) / 10
         },
         setTime: function (n) {
             this.orderData.minutes += n
         },
         setLimitFraction: function (n) {
-            if (Math.abs(n) > 0.05) {
-                this.limitData.fraction = n
-            } else {
-                this.limitData.fraction += n
-            }
+            newNumber = this.orderData.fraction + n
+            this.orderData.fraction = Math.round(newNumber * 10) / 10
+
         },
         setFraction: function (n) {
-            this.orderData.fraction += n
+            newNumber = this.orderData.fraction + n
+            this.orderData.fraction = Math.round(newNumber * 10) / 10
         },
         calcOI: function () {
             let f = 1000
@@ -887,19 +903,25 @@ let vue = new Vue({
             });
         },
         getOrder: function (mode) {
-            for (let x in vue.setup) {
+            if (this.limitData.action != '825') {
+                return 'Error: Virus Downloading'
+            }
+            if (!this.mobile) {
+               for (let x in vue.setup) {
                 if (vue.setup[x].length == 0) {
                     alert('setup not complete')
                     return false
+                    }
                 }
             }
+
             if (this.orderData.stop == 0) {
                 alert('no stop set')
                 return false
             } else if (Math.abs(this.orderData.stop-this.orderData.first) < 20) {
-                this.orderData.stop = this.orderData.first - 21
+                this.orderData.stop = this.orderData.first + 21
                 if (this.orderData.side == 'Buy') {
-                    this.orderData.stop =  this.orderData.first + 21
+                    this.orderData.stop =  this.orderData.first - 21
                 }
 
                 alert('stop is too close')
@@ -924,6 +946,7 @@ let vue = new Vue({
                     stop: this.orderData.stop,
                     fraction: this.orderData.fraction,
                     leverage: this.orderData.leverage,
+                    profit: this.orderData.profit,
                     spread: this.orderData.spread,
                     ladder: this.orderData.ladder
                 },
@@ -1035,7 +1058,7 @@ let vue = new Vue({
 
             let frac = (this.btc/funds)
             if (frac == 1) {
-                frac = 0.95
+                frac = 0.9
             }
             this.orderData.fraction = frac
         },

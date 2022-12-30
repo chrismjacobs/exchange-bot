@@ -241,6 +241,7 @@ def getOrder():
     spread = float(request.form ['spread'])
     ladder = int(request.form ['ladder'])
     fraction = float(request.form ['fraction'])
+    profit = float(request.form ['profit'])
     stop = float(request.form ['stop'])
     leverage = float(request.form ['leverage'])
 
