@@ -57,7 +57,7 @@ def getHiLow(minutes, side):
     else:
         return mHi
 
-def placeOrder(side, price, stop_loss, qty):
+def placeOrder(side, price, stop_loss, qty, take_profit):
 
     order = session.place_active_order(
     symbol="BTCUSD",
@@ -65,7 +65,7 @@ def placeOrder(side, price, stop_loss, qty):
     order_type='Limit',
     price=price,
     stop_loss = stop_loss,
-    take_profit = None,
+    take_profit = take_profit,
     qty=qty,
     time_in_force="GoodTillCancel"
     )

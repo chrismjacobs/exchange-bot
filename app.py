@@ -54,35 +54,6 @@ def trade(pw):
 
     return render_template('tradingdesk.html', tradeJournal=file_content)
 
-@app.route('/journal/<string:pw>')
-def journal(pw):
-    if pw != PASSWORD:
-        return abort
-
-    mList = [
-        'October',
-        'November'
-    ]
-
-    bucket = 'rekt-journal'
-
-    jDict = {
-
-    }
-
-    for m in mList:
-
-        key = 'tradeJournal_' + m + '.json'
-        content_object = s3_resource.Object( bucket, key )
-        file_content = content_object.get()['Body'].read().decode('utf-8')
-
-        jDict[m] = json.loads(file_content)
-
-
-    return render_template('journaldesk.html', tradeJournal=json.dumps(jDict))
-
-
-
 
 @app.route('/getData', methods=['POST'])
 def getData():
@@ -169,7 +140,6 @@ def getData():
         funds = session.get_wallet_balance()['result']['BTC']['equity']
         return jsonify({'result' : funds, 'mode' : mode})
 
-
 @app.route('/getTrade', methods=['POST'])
 def getTrade():
     pw = request.form ['pw']
@@ -181,6 +151,7 @@ def getTrade():
     spread = int(request.form ['spread'])
     price = int(request.form ['price'])
     fraction = float(request.form ['fraction'])
+    profit = None
 
     position = session.my_position(symbol="BTCUSD")['result']
     print('position', position)
@@ -220,9 +191,10 @@ def getTrade():
         stop = None
         value = price
 
-        print(side, value, stop, positionSize, fraction)
+        print(side, value, stop, positionSize, fraction, profit)
 
-        result = placeOrder(side, value, stop, positionSize*fraction)
+
+        result = placeOrder(side, value, stop, positionSize*fraction, profit)
 
 
 
@@ -257,7 +229,10 @@ def getOrder():
         session.set_leverage(symbol="BTCUSD", leverage=leverage)
 
     if first == None or first == 0:
-        first = price
+        if side == 'Buy':
+            first = price + 0.5
+        if side == 'Sell':
+            first = price - 0.5
 
     start = 1
     if ladder == 1:
@@ -273,10 +248,42 @@ def getOrder():
 
     result = None
 
+    if profit == 0:
+        profit = None
+
     for value in spreadArray:
-        result = placeOrder(side, value, stop, qty/len(spreadArray))
+        result = placeOrder(side, value, stop, qty/len(spreadArray), profit)
 
     return jsonify({'result' : result})
+
+
+
+@app.route('/journal/<string:pw>')
+def journal(pw):
+    if pw != PASSWORD:
+        return abort
+
+    mList = [
+        'October',
+        'November'
+    ]
+
+    bucket = 'rekt-journal'
+
+    jDict = {
+
+    }
+
+    for m in mList:
+
+        key = 'tradeJournal_' + m + '.json'
+        content_object = s3_resource.Object( bucket, key )
+        file_content = content_object.get()['Body'].read().decode('utf-8')
+
+        jDict[m] = json.loads(file_content)
+
+
+    return render_template('journaldesk.html', tradeJournal=json.dumps(jDict))
 
 @app.route('/recordTrade', methods=['POST'])
 def recordTrade():
@@ -346,13 +353,6 @@ def addImage():
 
     return jsonify({'result' : json.dumps(imageSet)})
 
-@app.route('/runStream', methods=['POST', 'GET'])
-def runStream():
-    runStream()
-
-    return 'Stream Running'
-
-# from bot import *
 
 
 if __name__ == '__main__':
