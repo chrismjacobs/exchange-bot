@@ -18,8 +18,8 @@ try:
 except:
     print('EXCEPTION')
     SECRET_KEY = os.environ['SECRET_KEY']
-    API_KEY = os.environ['API_KEY']
-    API_SECRET= os.environ['API_SECRET']
+    API_KEY_KRAKEN = os.environ['API_KEY_KRAKEN']
+    API_SEC_KRAKEN = os.environ['API_SEC_KRAKEN']
     # PASSWORD= os.environ['PASSWORD']
     REDIS_URL= os.environ['REDIS_URL']
 
