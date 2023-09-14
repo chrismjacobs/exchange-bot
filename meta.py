@@ -20,6 +20,7 @@ except:
     SECRET_KEY = os.environ['SECRET_KEY']
     API_KEY_KRAKEN = os.environ['API_KEY_KRAKEN']
     API_SEC_KRAKEN = os.environ['API_SEC_KRAKEN']
+
     # PASSWORD= os.environ['PASSWORD']
     REDIS_URL= os.environ['REDIS_URL']
 
