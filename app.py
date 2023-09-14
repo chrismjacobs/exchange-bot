@@ -2,7 +2,7 @@ from flask import Flask, request, render_template, jsonify, abort
 import json
 import time
 import datetime
-from meta import SECRET_KEY, PASSWORD, r
+from settings import SECRET_KEY, r, CODE, auth_required
 from exchangeAPI import apiFunds, apiTicker
 
 
@@ -12,6 +12,7 @@ app.config['DEBUG'] = True
 
 
 @app.route('/')
+@auth_required
 def home():
 
     context = {}
@@ -44,6 +45,7 @@ def tradingview_webhook():
     data = json.loads(request.data)
     print('TV DATA', data)
     r.set('LAST ALERT', json.dumps(data))
+    return 'TRADING VIEW'
 
 
 # @app.route('/getTrade', methods=['POST'])

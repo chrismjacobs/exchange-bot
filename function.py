@@ -2,7 +2,7 @@ import json
 import time
 import base64
 import datetime
-from meta import session, s3_resource
+from settings import session, s3_resource
 
 
 def setLeverage(first, stop, risk, fraction, leverage):

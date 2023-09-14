@@ -9,7 +9,7 @@ import hmac
 import base64
 import requests
 
-from meta import API_KEY_KRAKEN, API_SEC_KRAKEN
+from settings import API_KEY_KRAKEN, API_SEC_KRAKEN, r
 
 
 api_url = "https://api.kraken.com"
