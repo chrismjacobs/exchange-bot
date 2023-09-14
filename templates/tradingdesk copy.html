@@ -199,6 +199,119 @@
 
 
 
+
+    </div> <!-- end trading desk-->
+
+    <div v-if="!mobile" class="content-section row align-items-start m-5">
+
+    <div class="col-5">
+
+        <div class="content-section" >
+            <h1> Trade Journal [[currentTrade()]] <span v-if="loaded > 0">(loaded)</span> </h1>
+        </div>
+        <div>
+            <select class="form-select" id="entrySelect">
+                <template v-for="(item, key) in tradeHistory" :key="key">
+                    <option :value="key">[[key]] [[item.record.TITLE]] </option>
+                </template>
+            </select>
+            <label class="btn" @click="getEntry()">LOAD</label>
+            <label class="btn" @click="cycleJournal()">CYCLE</label>
+            <label class="btn" @click="edit = !edit">EDIT</label>
+        </div>
+
+        <!--<div class="input-group mb-3">
+            <label class="input-group-text" for="inputGroupSelect01">TYPE</label>
+            <select @change='getType()' class="form-select" id="typeSelect">
+              <option value="SFPHL">SFP hi/lo</option>
+              <option value="SFPKL">SFP key level</option>
+              <option value="RSB">Resistance/Support Bounce</option>
+              <option value="SVP">Session Range</option>
+              <option value="CON">Confluence</option>
+            </select>
+        </div> -->
+
+        <template v-for="(item, key) in journalData" :key="key">
+            <div class="form-check form-switch">
+                <label class="input-group-text">[[  key  ]]</label>
+                <div v-if="loaded == 0 || edit ">
+                <textarea :id="key" class="form-control" :placeholder="placeholderData[key]" v-model="journalData[key]" :style="getText(key)"></textarea>
+                </div>
+                <div :class="getJRow(journalData.RESULT)" v-else>
+                    <template v-for="x in getSplit(journalData[key])">
+                    <span> [[x]] </span><br>
+                    </template>
+                </div>
+            </div>
+        </template>
+
+        <br>
+
+        <div class="content-section">
+
+        <div class="input-group mb-3">
+            <button @click="recordTrade()" class="btn btn-secondary m-3 btn-dark" type="button" id="button-addon1">Record Trade</button>
+            <button @click="saveLocal(1)" class="btn btn-secondary m-3 btn-info" type="button" id="button-addon1">Save Local</button>
+            <button @click="saveLocal(0)" class="btn btn-secondary m-3 btn-danger" type="button" id="button-addon1">Clear Local</button>
+        </div>
+
+        </div>
+    </div>
+
+    <div class="col-7">
+            <div class="content-section" >
+                <h1> IMAGES </h1>
+                <input type="file" id="image" accept="image/*" @change="imageValidation('image')"> </input>
+                <button @click="deleteImage()" class="btn btn-secondary m-3 btn-danger" type="button" id="button-addon1">Delete</button>
+                <button @click="cycleImage()" class="btn btn-secondary m-3 btn-info" type="button" id="button-addon2">Cycle</button>
+
+            <div class="row align-items-start">
+
+                    <div class="col-9">
+                        <img :src="imageArray[view]" class="img-fluid rounded">
+                    </div>
+                    <div class="col-3">
+                        <div v-for="(item, key) in imageArray" :key="key" style="inline:block">
+                        <img @click="view = key" :src="item" class="img-thumbnail rounded" :alt="key">
+                        </div>
+                    </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div v-if="!mobile"  class="content-section">
+        <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Title</th>
+                <th scope="col">Type</th>
+                <th scope="col">Result</th>
+              </tr>
+            </thead>
+            <tbody>
+            <template v-for="(item, key) in tradeHistory" :key="key">
+              <tr :class="getRow(item.record.RESULT[0])">
+                <th scope="row"><span  @click="loadRecord(key)">#[[key]]</span> </th>
+                <td>[[item.record.TITLE]]</td>
+                <td>[[item.record.TYPE]]</td>
+                <td>[[item.record.RESULT]]</td>
+              </tr>
+            </template>
+            </tbody>
+          </table>
+        </div>
+
+
+    </div>
+
+
+
+    <span style="display:none" id="tradeJournal">{{tradeJournal}}</span>
+
+
+
 </div> <!-- end vue app-->
 </main>
 
@@ -223,6 +336,8 @@ if (report.includes('Android') || report.includes('iPhone') ) {
     console.log('mobile')
 }
 
+let pw = window.location.href.split('/').pop()
+
 
 startVue()
 
@@ -235,9 +350,28 @@ let vue = new Vue({
     delimiters: ['[[', ']]'],
     mounted: function() {
         console.log(localStorage)
+        if (localStorage['lastJournal']) {
+            this.journalData = JSON.parse(localStorage.lastJournal)
+            this.imageArray = JSON.parse(localStorage.imageArray)
+        }
+
+        let tj = document.getElementById('tradeJournal').innerHTML
+        //console.log('tj', tj)
+
+        this.tradeHistory = JSON.parse(tj)
+
+        this.getData('leverage', 0)
+        this.getData('funds')
+
+        if (localStorage['bearNotes']) {
+            this.bearNotesList = JSON.parse(localStorage['bearNotes'])
+        }
+        if (localStorage['bullNotes']) {
+            this.bullNotesList = JSON.parse(localStorage['bullNotes'])
+        }
     },
     data: {
-        pw: '',
+        pw: pw,
         setup:{
             1:'',
             2:'',

@@ -1,7 +1,7 @@
 import boto3
 import json
 import os
-from pybit import inverse_perpetual, usdt_perpetual
+
 import redis
 
 LOCAL = False
@@ -15,6 +15,8 @@ try:
     SECRET_KEY = config.SECRET_KEY
     PASSWORD = config.PASSWORD
     REDIS_URL = config.REDIS_URL
+    API_KEY_KRAKEN = config.API_KEY_KRAKEN
+    API_SEC_KRAKEN = config.API_SEC_KRAKEN
     LOCAL = True
     print('SUCCESS')
 except:
@@ -27,34 +29,6 @@ except:
     PASSWORD= os.environ['PASSWORD']
     REDIS_URL= os.environ['REDIS_URL']
 
-
-
-session = inverse_perpetual.HTTP(
-    endpoint='https://api.bybit.com',
-    api_key= API_KEY,
-    api_secret=API_SECRET
-)
-
-print('bybit session', session)
-
-
-s3_resource = boto3.resource('s3',
-        aws_access_key_id=AWS_ACCESS_KEY_ID,
-        aws_secret_access_key= AWS_SECRET_ACCESS_KEY)
-
-print('S3', s3_resource)
-
-session_unauth_USD = usdt_perpetual.HTTP(
-    endpoint="https://api.bybit.com"
-)
-session_unauth_USDT = inverse_perpetual.HTTP(
-    endpoint="https://api.bybit.com"
-)
-
-# print(session_unauth_USD.open_interest(
-#     symbol="BTCUSD",
-#     period="5min"
-# ))
 
 
 if REDIS_URL:
@@ -70,3 +44,6 @@ if REDIS_URL:
     # )
 
     print('REDIS', r)
+    print('REDIS', r.keys())
+    r.set('TEST', 'TEST')
+    print('REDIS', r.get('TEST'))
