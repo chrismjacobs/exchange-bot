@@ -3,7 +3,7 @@ import json
 import time
 import datetime
 from settings import SECRET_KEY, r, CODE, auth_required
-from exchangeAPI import apiFunds, apiTicker
+from exchangeAPI import apiFunds, apiTicker, apiOrder
 
 
 app = Flask(__name__)
@@ -30,6 +30,31 @@ def getFunds():
     return apiFunds(tickerFunds)
 
 
+@app.route('/getOrder', methods=['POST'])
+def getOrder():
+    print(request.form)
+    ORDERTYPE = request.form['mode']
+    PRICE = request.form['price']
+    STOP = request.form['stop']
+    PROFIT = request.form['profit']
+    SIDE = request.form['side'].lower()
+    VOLUME = request.form['volume']
+    print(ORDERTYPE, SIDE, VOLUME, PRICE, STOP, PROFIT)
+
+    LEV = 0
+
+    order = apiOrder(ORDERTYPE, SIDE, VOLUME, PRICE, LEV)
+
+    r.lpush('trades', json.dumps(order))
+    # if len(order['error']) == 0:
+    #     print('SETTING STOP')
+    #     apiOrder('stop-loss', SIDE, VOLUME, STOP, LEV)
+
+    # if pw != PASSWORD:
+    #     return abort
+    return order
+
+
 @app.route('/getTicker', methods=['POST'])
 def getTicker():
     # pw = request.form ['pw']
@@ -39,12 +64,33 @@ def getTicker():
     #     return abort
     return apiTicker(ticker)
 
+@app.route('/getAlerts', methods=['POST'])
+def getAlerts():
+    print('getAerts')
+
+    alerts = r.lrange('alerts', 0, -1)
+
+    # if pw != PASSWORD:
+    #     return abort
+    return json.dumps(alerts)
+
+@app.route('/getTrades', methods=['POST'])
+def getTrades():
+
+    trades = r.lrange('trades', 0, -1)
+
+    return json.dumps(trades)
+
 
 @app.route("/webhook", methods=['POST'])
 def tradingview_webhook():
+
+    print(request)
     data = json.loads(request.data)
     print('TV DATA', data)
-    r.set('LAST ALERT', json.dumps(data))
+
+    r.lpush('alerts', json.dumps(data))
+
     return 'TRADING VIEW'
 
 

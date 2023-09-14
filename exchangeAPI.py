@@ -60,3 +60,26 @@ def apiTicker(TICKER):
     resp = requests.get('https://api.kraken.com/0/public/Ticker?pair=' + TICKER)
     print(resp.json())
     return resp.json()
+
+def apiOrder(ORDERTYPE, SIDE, VOLUME, PRICE, LEV):
+
+    resp = kraken_request('/0/private/AddOrder', {
+        "nonce": str(int(1000*time.time())),
+        "ordertype": ORDERTYPE,
+        "type": SIDE,
+        "volume": VOLUME,
+        "pair": "BTCUSD",
+        "price": PRICE
+        #"leverage": 2
+
+    }, api_key, api_sec)
+
+    print(resp.json())
+
+    return resp.json()
+
+def apiCancelAll():
+    resp = kraken_request('/0/private/CancelOrder', {
+        "nonce": str(int(1000*time.time())),
+        "txid": "OU3QQB-7G2XE-QOZOS5"
+    }, api_key, api_sec)

@@ -35,7 +35,7 @@ if REDIS_URL:
         r = redis.from_url(REDIS_URL, ssl_cert_reqs=None, decode_responses=True)
     else:
         ## For Render URL
-        r = redis.from_url(REDIS_URL)
+        r = redis.from_url(REDIS_URL, decode_responses=True)
 
         ## For Heroku Redis
         # r = redis.Redis(
@@ -48,7 +48,7 @@ if REDIS_URL:
     print('REDIS', r)
     print('REDIS', r.keys())
     r.set('TEST', 'TEST')
-    print('REDIS', r.get('TEST'))
+    print('REDIS', r.get('LAST ALERT'))
 
 def auth_required(f):
     @wraps(f)
