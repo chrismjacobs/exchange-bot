@@ -8,12 +8,8 @@ LOCAL = False
 
 try:
     import config
-    API_KEY = config.API_KEY
-    API_SECRET = config.API_SECRET
-    AWS_ACCESS_KEY_ID = config.AWS_ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY = config.AWS_SECRET_ACCESS_KEY
     SECRET_KEY = config.SECRET_KEY
-    PASSWORD = config.PASSWORD
+    # PASSWORD = config.PASSWORD
     REDIS_URL = config.REDIS_URL
     API_KEY_KRAKEN = config.API_KEY_KRAKEN
     API_SEC_KRAKEN = config.API_SEC_KRAKEN
@@ -21,12 +17,10 @@ try:
     print('SUCCESS')
 except:
     print('EXCEPTION')
-    AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
-    AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
     SECRET_KEY = os.environ['SECRET_KEY']
     API_KEY = os.environ['API_KEY']
     API_SECRET= os.environ['API_SECRET']
-    PASSWORD= os.environ['PASSWORD']
+    # PASSWORD= os.environ['PASSWORD']
     REDIS_URL= os.environ['REDIS_URL']
 
 
