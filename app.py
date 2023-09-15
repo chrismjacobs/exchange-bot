@@ -22,6 +22,8 @@ def home():
 
 @app.route('/getFunds', methods=['POST'])
 def getFunds():
+    if True:
+        return False
     # pw = request.form ['pw']
     tickerFunds = request.form ['tickerFunds']
 
@@ -32,6 +34,8 @@ def getFunds():
 
 @app.route('/getOrder', methods=['POST'])
 def getOrder():
+    if True:
+        return False
     print(request.form)
     ORDERTYPE = request.form['mode']
     PRICE = request.form['price']
@@ -67,13 +71,23 @@ def getTicker():
 
     # if pw != PASSWORD:
     #     return abort
-    return apiTicker(ticker)
+    return False #apiTicker(ticker)
 
 @app.route('/getAlerts', methods=['POST'])
 def getAlerts():
     print('getAerts')
 
     alerts = r.lrange('alerts', 0, -1)
+
+    # if pw != PASSWORD:
+    #     return abort
+    return json.dumps(alerts)
+
+@app.route('/getLutfi', methods=['POST'])
+def getLutfi():
+    print('getLutfi')
+
+    alerts = r.lrange('lutfi', 0, -1)
 
     # if pw != PASSWORD:
     #     return abort
@@ -95,6 +109,17 @@ def tradingview_webhook():
     print('TV DATA', data)
 
     r.lpush('alerts', json.dumps(data))
+
+    return 'TRADING VIEW'
+
+@app.route("/lutfi", methods=['POST'])
+def tradingview_lutfi():
+
+    print(request)
+    data = json.loads(request.data)
+    print('TV DATA', data)
+
+    r.lpush('lufti', json.dumps(data))
 
     return 'TRADING VIEW'
 

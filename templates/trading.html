@@ -15,7 +15,7 @@
 <main role="main" class="container-md">
     <body style="background:black">
         <div id="vue-app" style="background:black">
-            <div :class="getMargin()" id="tradingdesk">
+            <div :class="getMargin()" id="tradingdesk" style="display:none">
 
                 <div class="text-white bg-black">
                     <br>
@@ -200,11 +200,11 @@
                     <div class="col m-2 rounded" style="background:lightgrey">
 
                         <div class="mb-3 mt-3">
-                            <button @click="getTrades()" class="btn btn-secondary btn-lg" type="button">Trades</button>
+                            <button @click="getLufti()" class="btn btn-secondary btn-lg" type="button">Lufti Alerts</button>
                             <br>
                             <br>
 
-                            <template v-for="(item, key) in trades" :key="key">
+                            <template v-for="(item, key) in lufti" :key="key">
                                 <h4> [[item]] </h4>
                             </template>
                         </div>
@@ -261,6 +261,7 @@ let vue = new Vue({
     },
     data: {
         alerts: [],
+        lufti: [],
         trades: [],
         ticker: 'BTCUSD',
         tickerFunds: '',
@@ -590,6 +591,25 @@ let vue = new Vue({
             })
             .fail(function(){
                   alert('error has occurred getAlerts');
+            });
+        },
+        getLutfi: function () {
+            console.log('getLutfi')
+
+
+            $.ajax({
+                data : {
+                },
+                type : 'POST',
+                url : '/getLutfi'
+
+            })
+            .done(function(data) {
+                console.log(data)
+                vue.lufti = JSON.parse(data)
+            })
+            .fail(function(){
+                  alert('error has occurred getLutfi');
             });
         },
         getTrades: function () {
