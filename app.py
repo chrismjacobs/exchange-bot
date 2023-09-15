@@ -45,10 +45,15 @@ def getOrder():
 
     order = apiOrder(ORDERTYPE, SIDE, VOLUME, PRICE, LEV)
 
-    r.lpush('trades', json.dumps(order))
-    # if len(order['error']) == 0:
-    #     print('SETTING STOP')
-    #     apiOrder('stop-loss', SIDE, VOLUME, STOP, LEV)
+    #r.lpush('trades', json.dumps(order))
+    if len(order['error']) == 0 and ORDERTYPE == 'limit':
+        revSide = 'buy'
+        if SIDE == revSide:
+            revSide = 'sell'
+        print('SETTING STOP')
+        apiOrder('stop-loss', revSide, VOLUME, STOP, LEV)
+        # print('SETTING TP')
+        # apiOrder('take-profit', 'buy', VOLUME, PROFIT, LEV)
 
     # if pw != PASSWORD:
     #     return abort

@@ -69,7 +69,7 @@ def apiOrder(ORDERTYPE, SIDE, VOLUME, PRICE, LEV):
         "type": SIDE,
         "volume": VOLUME,
         "pair": "BTCUSD",
-        "price": PRICE
+        "price": PRICE,
         #"leverage": 2
 
     }, api_key, api_sec)
