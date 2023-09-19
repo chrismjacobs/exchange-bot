@@ -45,14 +45,17 @@ def tradingview_webhook():
     print('TV DATA', data)
     print('TV DATA', type(data))
     print('TV DATA', data.keys())
-    if not data['TVCODE']:
-        addAlert('No TVCODE found in webhook alert')
-        return False
-    elif data['TVCODE'] != CODE:
-        addAlert('TVCODE in webhook alert is incorrect')
-        return False
-    else:
-        print('CODE ERROR')
+    try:
+        if not data['TVCODE']:
+            addAlert('No TVCODE found in webhook alert')
+        elif data['TVCODE'] != CODE:
+            addAlert('TVCODE in webhook alert is incorrect')
+        else:
+            print('CODE ERROR')
+
+    except Exception as e:
+        print ('EXCEPTION ', e)
+
 
 
     TICKER = data['TICKER']
