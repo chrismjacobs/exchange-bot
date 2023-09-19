@@ -4,7 +4,7 @@ import time
 import datetime
 from settings import SECRET_KEY, r, CODE, auth_required
 # from exchangeAPI import apiFunds, apiTicker, apiOrder
-from getAPI import getInstruments, tradeStatus, closeOpen, openPosition, getLeverage
+from getAPI import getInstruments, tradeStatus, closeOpen, openPosition
 
 
 app = Flask(__name__)
