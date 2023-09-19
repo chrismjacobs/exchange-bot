@@ -143,12 +143,28 @@ def closeOpen(instrument, STOP, PROP, LEV):
                 "orderType": "mkt",
                 "symbol": instrument,
                 "side": SIDE,
-                "size": 20000
+                "size": SIZE
             }
             openResult = cfPrivate.send_order_1(openOrder)
             openRes = json.loads(openResult)
             if openRes['result'] and openRes['result'] != 'success':
                 print('openOrder Error: ' + openRes['result'])
+            print(openRes)
+
+def openPosition(instrument, STOP, PROP, LEV):
+
+            SIDE = 'buy'
+
+            openOrder = {
+                "orderType": "mkt",
+                "symbol": instrument,
+                "side": SIDE,
+                "size": 0.5
+            }
+            openResult = cfPrivate.send_order_1(openOrder)
+            openRes = json.loads(openResult)
+            if openRes['result'] and openRes['result'] != 'success':
+                print('openNewOrder Error: ' + openRes['result'])
             print(openRes)
 
 

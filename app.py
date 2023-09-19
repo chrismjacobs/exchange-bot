@@ -63,9 +63,9 @@ def tradingview_webhook():
 
     if instrument not in assets:
         assets[instrument] = {
-            'lev' : 1,
-            'prop' : 0,
-            'stop' : 1,
+            'lev' : 5,
+            'prop' : 80,
+            'stop' : 200,
             'webhooks' : [json.dumps(data)],
             'trades' : []
         }
@@ -117,7 +117,7 @@ def tradeAsset(instrument, SIDE, STOP, PROP, LEV):
         return tradeData
 
     elif TS == None:
-        tradeData = openPosition(instrument, STOP, PROP, LEV)
+        tradeData = openPosition(instrument, STOP, PROP, LEV, SIDE)
         if tradeData['error']:
             addAlert(tradeData['error'])
             return False
