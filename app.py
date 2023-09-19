@@ -50,10 +50,10 @@ def tradingview_webhook():
         print(data['TVCODE'])
         if not data['TVCODE']:
             addAlert('No TVCODE found in webhook alert')
-            return False
+            return 'Done'
         elif int(data['TVCODE']) != int(CODE):
             addAlert('TVCODE in webhook alert is incorrect')
-            return False
+            return 'Done'
         else:
             print('CODE SUCCESS')
 
@@ -69,11 +69,12 @@ def tradingview_webhook():
     print(TICKER)
 
     instrument = checkTicker(TICKER)
-    if not instrument:
-        return False
+    print('ticker check', instrument)
 
 
     assets = json.loads(r.get('assets'))
+
+    print(assets)
 
     if instrument not in assets:
         assets[instrument] = {
@@ -83,16 +84,17 @@ def tradingview_webhook():
             'webhooks' : [json.dumps(data)],
             'trades' : []
         }
-        return False
+        r.set('assets', json.dumps(assets))
+        return 'Done'
     elif assets[instrument]['prop'] == 0:
         addAlert(instrument + ': No allocation proportion set')
-        return False
+        return 'Done'
     elif assets[instrument]['lev'] < 2:
         addAlert(instrument + ': Double check leverage is same as exchange (>2)')
-        return False
+        return 'Done'
     elif assets[instrument]['stop'] == 1:
         addAlert(instrument + ': Set appropriate stop')
-        return False
+        return 'Done'
 
     assets[instrument]['webhooks'].append(data)
     STOP = assets[instrument]['stop']
