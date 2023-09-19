@@ -44,7 +44,7 @@ def tradingview_webhook():
     data = json.loads(request.data)
     print('TV DATA', data)
     print('TV DATA', type(data))
-    print('TV DATA', data))
+    print('TV DATA', data.keys())
     if not data['TVCODE']:
         addAlert('No TVCODE found in webhook alert')
         return False
