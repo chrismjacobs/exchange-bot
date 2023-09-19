@@ -22,6 +22,7 @@ def home():
 
 def addAlert(msg):
     r.lpush('alerts', msg)
+    return True
 
 
 def checkTicker(ticker):
@@ -46,12 +47,15 @@ def tradingview_webhook():
     print('TV DATA', type(data))
     print('TV DATA', data.keys())
     try:
+        print(data['TVCODE'])
         if not data['TVCODE']:
             addAlert('No TVCODE found in webhook alert')
-        elif data['TVCODE'] != CODE:
+            return False
+        elif int(data['TVCODE']) != int(CODE):
             addAlert('TVCODE in webhook alert is incorrect')
+            return False
         else:
-            print('CODE ERROR')
+            print('CODE SUCCESS')
 
     except Exception as e:
         print ('EXCEPTION ', e)
