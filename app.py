@@ -25,6 +25,7 @@ def addAlert(msg):
 
 
 def checkTicker(ticker):
+    print('CHECK TICKER')
     if 'USD' not in ticker:
         addAlert('USD not found in ticker')
         return False
@@ -40,7 +41,6 @@ def checkTicker(ticker):
 @app.route("/webhook", methods=['POST'])
 def tradingview_webhook():
 
-    print(request)
     data = json.loads(request.data)
     print('TV DATA', data)
     if not data['TVCODE']:
@@ -49,10 +49,15 @@ def tradingview_webhook():
     elif data['TVCODE'] != CODE:
         addAlert('TVCODE in webhook alert is incorrect')
         return False
+    else:
+        print('CODE ERROR')
+
 
     TICKER = data['TICKER']
     TIME = data['TIME']
     SIDE = data['SIDE']
+
+    print(TICKER)
 
     instrument = checkTicker(TICKER)
     if not instrument:
