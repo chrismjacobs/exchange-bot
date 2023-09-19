@@ -17,9 +17,9 @@ try:
     USER = 'User'
     PASSWORD = 'Pass'
     CODE = 123
-    print('SUCCESS')
+    print('CONFIG SUCCESS')
 except:
-    print('EXCEPTION')
+    print('ACCESS OS ENVIRON CREDENTIALS')
     SECRET_KEY = os.environ['SECRET_KEY']
     API_KEY_KRAKEN = os.environ['API_KEY_KRAKEN']
     API_SEC_KRAKEN = os.environ['API_SEC_KRAKEN']
@@ -47,8 +47,10 @@ if REDIS_URL:
 
     print('REDIS', r)
     print('REDIS', r.keys())
-    r.set('TEST', 'TEST')
-    print('REDIS', r.get('LAST ALERT'))
+    if not r.get('assets'):
+        r.set('assets', json.dumps({}))
+    if not r.get('webhooks'):
+        r.set('webhooks', json.dumps({}))
 
 def auth_required(f):
     @wraps(f)
