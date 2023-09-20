@@ -2,50 +2,25 @@ import os
 import json
 import krakenAPI as kAPI
 import datetime
+from settings import API_KEY_KRAKEN, API_SEC_KRAKEN, APIPATH
 
-
-# API_KEY_KRAKEN = os.getenv('API_KEY_KRAKEN')
-# API_SEC_KRAKEN = os.getenv('API_SEC_KRAKEN')
-# EXCHANGE = os.getenv('EXCHANGE')
-try:
-    import config
-
-    REDIS_URL = config.REDIS_URL
-    API_KEY_KRAKEN = config.API_KEY_KRAKEN
-    API_SEC_KRAKEN = config.API_SEC_KRAKEN
-    EXCHANGE = config.EXCHANGE
-    print('CONFIG SUCCESS')
-except:
-    print('ACCESS OS ENVIRON CREDENTIALS')
-    API_KEY_KRAKEN = os.environ['API_KEY_KRAKEN']
-    API_SEC_KRAKEN = os.environ['API_SEC_KRAKEN']
-    REDIS_URL = os.environ['REDIS_URL']
-    EXCHANGE = os.environ['EXCHANGE']
-
-print(API_KEY_KRAKEN)
-print(API_SEC_KRAKEN)
-print(EXCHANGE)
 
 # accessible on your Account page under Settings -> API Keys
 apiPublicKey = API_KEY_KRAKEN
 # accessible on your Account page under Settings -> API Keys
 apiPrivateKey = API_SEC_KRAKEN
 
-apiPath = "https://futures.kraken.com"
-
-if EXCHANGE == 'DEMO':
-    apiPath = "https://demo-futures.kraken.com"
 
 timeout = 20
 checkCertificate = True  # when using the test environment, this must be set to "False"
 useNonce = False  # nonce is optional
 
 
-cfPublic = kAPI.cfApiMethods(apiPath,
+cfPublic = kAPI.cfApiMethods(APIPATH,
                              timeout=timeout,
                              checkCertificate=checkCertificate
                              )
-cfPrivate = kAPI.cfApiMethods(apiPath,
+cfPrivate = kAPI.cfApiMethods(APIPATH,
                               timeout=timeout,
                               apiPublicKey=apiPublicKey,
                               apiPrivateKey=apiPrivateKey,
@@ -53,6 +28,21 @@ cfPrivate = kAPI.cfApiMethods(apiPath,
                               useNonce=useNonce
                               )
 
+def getFunds():
+    result = cfPrivate.get_accounts()
+    res = json.loads(result)
+    if res['result'] and res['result'] != 'success':
+        print('getFunds Error: ' + res['result'])
+
+    print("get_accounts:\n", res['accounts'].keys())
+    # dict_keys(['result', 'accounts', 'serverTime'])
+
+    for fund in res['accounts']['flex']:
+        print(fund + ': ' + str(res['accounts']['flex'][fund]))
+    marginEquity = res['accounts']['flex']['marginEquity']
+    collateralBasic = res['accounts']['flex']['marginEquity'] - res['accounts']['flex']['totalUnrealized']
+    availableMargin = res['accounts']['flex']['availableMargin']
+    return [marginEquity, collateralBasic, availableMargin]
 
 def getInstruments(asset):
     result = cfPublic.get_instruments()
@@ -113,31 +103,84 @@ def tradeStatus(instrument, LEV):
     ## no tradeStatus found
     return None
 
-def closeOpen(instrument, STOP, PROP, LEV):
+def getAllocation(instrument, PROP, LEV, OPENSIZE):
+
+    [marginEquity, collateralBasic, availableMargin] = getFunds()
+    #print(marginEquity, collateralBasic, availableMargin)
+    usdCollateral = round(collateralBasic * 0.95 * int(PROP)/100)
+    markPrice = getTicker(instrument)
+
+    r = 3
+
+    if markPrice > 1000:
+        r = 2
+    elif markPrice > 100:
+        r = 1
+    else:
+        r = 0
+
+    assetAmount = usdCollateral/markPrice * int(LEV)
+
+    print('Allocating for ' + instrument + ':\nCollateral $' + str(collateralBasic) +  ':\nCollateral% ' + str(usdCollateral) + '\nAmount of asset on leverage: ' + str(round(assetAmount, r)))
+
+    return round(assetAmount, r)
+
+def getStopPrice(instrument, STOP, SIDE):
+    STOPPRICE = 0.0
+
+    markPrice = getTicker(instrument)
+
+    STOPPRICE = markPrice - int(STOP)
+
+    if SIDE == 'sell':
+        STOPPRICE = markPrice + int(STOP)
+
+        ## get mark price
+    print('getStopPrice: ' + str(STOPPRICE))
+    return STOPPRICE
+
+def closeOpen(instrument, STOP, PROP, LEV, STOPID):
     result = cfPrivate.get_openpositions()
     res = json.loads(result)
     for p in res['openPositions']:
         if p['symbol'] == instrument:
             print('tradeStatus found:\n ' + instrument + ' ' + p['side'] + '\n' + str(p))
-            SIZE = p['size']
-            SIDE = 'buy'
-            CLOSE = 'sell'
-            if p['side'] == 'short':
-                CLOSE = 'buy'
+
+            CLOSESIZE = p['size']
+
+            SIDE = None
+            CLOSESIDE = None
+            STOPSIDE = None
+
+            if p['side'] == 'long':
                 SIDE = 'sell'
+                STOPSIDE = 'buy'
+                CLOSESIDE = 'sell'
+            elif p['side'] == 'short':
+                SIDE = 'buy'
+                STOPSIDE = 'sell'
+                CLOSESIDE = 'buy'
 
             closeOrder = {
                 "orderType": "mkt",
                 "symbol": instrument,
-                "side": CLOSE,
-                "size": SIZE
+                "side": CLOSESIDE,
+                "size": CLOSESIZE
             }
             closeResult = cfPrivate.send_order_1(closeOrder)
             closeRes = json.loads(closeResult)
-            if closeRes['result'] and closeRes['result'] != 'success':
-                #{'result': 'success', 'sendStatus': {'status': 'invalidSize'}, 'serverTime': '2023-09-19T07:01:43.680Z'}
-                print('closeOrder Error: ' + closeRes['result'])
             print(closeRes)
+            if len(closeRes['sendStatus']) < 2:
+                #{'result': 'success', 'sendStatus': {'status': 'invalidSize'}, 'serverTime': '2023-09-19T07:01:43.680Z'}
+                print('closeOrder Error: ' + str(closeRes['sendStatus']))
+                return {'error': closeResult, 'instrument': instrument}
+            print('CLOSE POSITION:\n' + closeResult)
+
+            ### Close last stop order
+            result = cfPrivate.cancel_order(STOPID)
+            print("cancel_order:\n", result)
+
+            SIZE = getAllocation(instrument, PROP, LEV, p['size'])
 
             openOrder = {
                 "orderType": "mkt",
@@ -147,46 +190,96 @@ def closeOpen(instrument, STOP, PROP, LEV):
             }
             openResult = cfPrivate.send_order_1(openOrder)
             openRes = json.loads(openResult)
-            if openRes['result'] and openRes['result'] != 'success':
-                print('openOrder Error: ' + openRes['result'])
-            print(openRes)
+            if len(openRes['sendStatus']) < 2:
+                #{'result': 'success', 'sendStatus': {'status': 'invalidSize'}, 'serverTime': '2023-09-19T07:01:43.680Z'}
+                print('openOrder Error: ' + str(openRes['sendStatus']))
+                return {'error': openResult, 'instrument': instrument}
+            print('OPEN POSITION:\n' + openResult)
 
-def openPosition(instrument, STOP, PROP, LEV):
+            STOPPRICE = getStopPrice(instrument, STOP, SIDE)
+            STOPID = instrument + '_' + str(STOPPRICE)
 
-            SIDE = 'buy'
-
-            openOrder = {
-                "orderType": "mkt",
+            stopOrder = {
+                "orderType": "stp",
                 "symbol": instrument,
-                "side": SIDE,
-                "size": 0.5
+                "side": STOPSIDE,
+                "size": SIZE,
+                "stopPrice" : STOPPRICE,
+                "triggerSignal": "mark_price",
+                "cliOrdId": STOPID
             }
-            openResult = cfPrivate.send_order_1(openOrder)
-            openRes = json.loads(openResult)
-            if openRes['result'] and openRes['result'] != 'success':
-                print('openNewOrder Error: ' + openRes['result'])
-            print(openRes)
+
+            stopResult = cfPrivate.send_order_1(stopOrder)
+            stopRes = json.loads(stopResult)
+            if len(stopRes['sendStatus']) < 2:
+                #{'result': 'success', 'sendStatus': {'status': 'invalidSize'}, 'serverTime': '2023-09-19T07:01:43.680Z'}
+                print('stopOrder Error: ' + str(stopRes['sendStatus']))
+                return {'error': stopResult, 'instrument': instrument}
+            print('STOP POSITION:\n' + stopResult)
+            STOPORDER = stopRes['sendStatus']['order_id']
+
+            return {'status': 'close open stop', 'instrument': instrument, 'STOPID': STOPORDER }
 
 
+def openPosition(instrument, STOP, PROP, LEV, SIDE):
+    SIZE = getAllocation(instrument, PROP, LEV, None)
 
-def getFunds():
-    result = cfPrivate.get_accounts()
-    res = json.loads(result)
-    if res['result'] and res['result'] != 'success':
-        print('getFunds Error: ' + res['result'])
+    STOPSIDE = 'sell'
 
-    print("get_accounts:\n", res['accounts'].keys())
-    # dict_keys(['result', 'accounts', 'serverTime'])
+    if SIDE == 'sell':
+        STOPSIDE = 'buy'
 
-    print(res['accounts']['flex'])
-    marginEquity = res['accounts']['flex']['marginEquity']
-    collateralBasic = res['accounts']['flex']['marginEquity'] - res['accounts']['flex']['totalUnrealized']
-    availableMargin = res['accounts']['flex']['availableMargin']
-    return (marginEquity, collateralBasic, availableMargin)
+
+    openOrder = {
+        "orderType": "mkt",
+        "symbol": instrument,
+        "side": SIDE,
+        "size": SIZE
+    }
+    openResult = cfPrivate.send_order_1(openOrder)
+    openRes = json.loads(openResult)
+    if len(openRes['sendStatus']) < 2:
+        #{'result': 'success', 'sendStatus': {'status': 'invalidSize'}, 'serverTime': '2023-09-19T07:01:43.680Z'}
+        print('openNewOrder Error: ' + str(openRes['sendStatus']))
+        return {'error': openResult, 'instrument': instrument}
+    print('OPEN NEW POSITION:\n' + openResult)
+
+    STOPPRICE = getStopPrice(instrument, STOP, SIDE)
+    STOPID = instrument + '_' + str(STOPPRICE)
+    stopOrder = {
+        "orderType": "stp",
+        "symbol": instrument,
+        "side": STOPSIDE,
+        "size": SIZE,
+        "stopPrice" : STOPPRICE,
+        "cliOrdId": STOPID
+    }
+
+    stopResult = cfPrivate.send_order_1(stopOrder)
+    stopRes = json.loads(stopResult)
+    if len(stopRes['sendStatus']) < 2:
+        #{'result': 'success', 'sendStatus': {'status': 'invalidSize'}, 'serverTime': '2023-09-19T07:01:43.680Z'}
+        print('stopNewOrder Error: ' + stopRes['sendStatus'])
+        return {'error': stopResult, 'instrument': instrument}
+    print('STOP NEW POSITION:\n' + stopResult)
+
+    STOPORDER = stopRes['sendStatus']['order_id']
+    return {'status': 'close open stop', 'instrument': instrument, 'STOPID': STOPORDER }
 
 
 instrument = 'pf_xbtusd'
+PROP=80
+LEV=5
+STOP=200
+STOPID= "143d2d66-c82e-49fc-8b12-117aad9127fd"
+SIDE='buy'
+ORDERID = "143d2d66-c82e-49fc-8b12-117aad9127fd"
 
-closeOpen(instrument, 0,0,0)
-
+# closeOpen(instrument, STOP, PROP, LEV, STOPID)
+# getAllocation(instrument, PROP, LEV, None)
+# result = cfPrivate.cancel_order(STOPID)
+# print("cancel_order:\n", result)
+# openPosition(instrument, STOP, PROP, LEV, SIDE)
 #tradeStatus(instrument, 5)
+# getTicker(instrument)
+

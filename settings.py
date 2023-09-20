@@ -13,6 +13,9 @@ try:
     REDIS_URL = config.REDIS_URL
     API_KEY_KRAKEN = config.API_KEY_KRAKEN
     API_SEC_KRAKEN = config.API_SEC_KRAKEN
+    DEMO_API_KEY_KRAKEN = config.DEMO_API_KEY_KRAKEN
+    DEMO_API_SEC_KRAKEN = config.DEMO_API_SEC_KRAKEN
+    EXCHANGE = config.EXCHANGE
     LOCAL = True
     USER = 'User'
     PASSWORD = 'Pass'
@@ -23,12 +26,21 @@ except:
     SECRET_KEY = os.environ['SECRET_KEY']
     API_KEY_KRAKEN = os.environ['API_KEY_KRAKEN']
     API_SEC_KRAKEN = os.environ['API_SEC_KRAKEN']
+    DEMO_API_KEY_KRAKEN = os.environ['DEMO_API_KEY_KRAKEN']
+    DEMO_API_SEC_KRAKEN = os.environ['DEMO_API_SEC_KRAKEN']
     USER = os.environ['USER']
     CODE = int(os.environ['CODE'])
     PASSWORD = os.environ['PASSWORD']
-    REDIS_URL= os.environ['REDIS_URL']
+    REDIS_URL = os.environ['REDIS_URL']
+    EXCHANGE = os.environ['EXCHANGE']
 
 
+APIPATH = "https://futures.kraken.com"
+
+if EXCHANGE.lower() == 'demo':
+    API_KEY_KRAKEN = DEMO_API_KEY_KRAKEN
+    API_SEC_KRAKEN = DEMO_API_SEC_KRAKEN
+    APIPATH = "https://demo-futures.kraken.com"
 
 if REDIS_URL:
     if LOCAL:
@@ -51,6 +63,8 @@ if REDIS_URL:
         r.set('assets', json.dumps({}))
     if not r.get('webhooks'):
         r.set('webhooks', json.dumps({}))
+    if not r.get('errors'):
+        r.set('errors', json.dumps({}))
 
 def auth_required(f):
     @wraps(f)

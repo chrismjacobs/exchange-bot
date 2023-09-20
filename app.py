@@ -4,7 +4,7 @@ import time
 import datetime
 from settings import SECRET_KEY, r, CODE, auth_required
 # from exchangeAPI import apiFunds, apiTicker, apiOrder
-from getAPI import getInstruments, tradeStatus, closeOpen, openPosition
+from getAPI import getInstruments, tradeStatus, closeOpen, openPosition, getFunds, getTicker
 
 
 app = Flask(__name__)
@@ -20,8 +20,19 @@ def home():
 
     return render_template('trading.html', **context)
 
-def addAlert(msg):
-    r.lpush('alerts', msg)
+def addAlert(instrument, msg):
+
+
+
+    errors = json.loads(r.get('errors'))
+
+    if instrument not in errors:
+        errors[instrument] = []
+
+    errorList = errors[instrument]
+    errorList.insert(0, msg)
+
+    r.set('errors', json.dumps(errors))
     return True
 
 
@@ -42,18 +53,25 @@ def checkTicker(ticker):
 @app.route("/webhook", methods=['POST'])
 def tradingview_webhook():
 
-    data = json.loads(request.data)
+    data = None
+
+    try:
+        data = json.loads(request.data)
+    except Exception as e:
+        print('DATA LOAD EXCEPTION')
+        addAlert('tradingview', e)
+        return 'ERROR'
     print('TV DATA', data)
     print('TV DATA', type(data))
     print('TV DATA', data.keys())
     try:
         print(data['TVCODE'])
         if not data['TVCODE']:
-            addAlert('No TVCODE found in webhook alert')
-            return 'Done'
+            addAlert('tradingview', 'No TVCODE found in webhook alert ' + request.data)
+            return 'ERROR'
         elif int(data['TVCODE']) != int(CODE):
-            addAlert('TVCODE in webhook alert is incorrect')
-            return 'Done'
+            addAlert('tradingview', 'TVCODE in webhook alert is incorrect' + request.data)
+            return 'ERROR'
         else:
             print('CODE SUCCESS')
 
@@ -73,6 +91,7 @@ def tradingview_webhook():
 
 
     assets = json.loads(r.get('assets'))
+    errors = json.loads(r.get('errors'))
 
     print(assets)
 
@@ -82,77 +101,83 @@ def tradingview_webhook():
             'prop' : 80,
             'stop' : 200,
             'webhooks' : [json.dumps(data)],
-            'trades' : []
+            'trades' : [],
+            'laststop' : 0
         }
+        errors[instrument] = []
         r.set('assets', json.dumps(assets))
+        r.set('errors', json.dumps(errors))
         return 'Done'
     elif assets[instrument]['prop'] == 0:
-        addAlert(instrument + ': No allocation proportion set')
+        addAlert(instrument, ': No allocation proportion set ' + request.data + ' ' + json.dumps(assets[instrument]))
         return 'Done'
     elif assets[instrument]['lev'] < 2:
-        addAlert(instrument + ': Double check leverage is same as exchange (>2)')
+        addAlert(instrument, ': Double check leverage is same as exchange (>2) ' + request.data + ' ' + json.dumps(assets[instrument]))
         return 'Done'
     elif assets[instrument]['stop'] == 1:
-        addAlert(instrument + ': Set appropriate stop')
+        addAlert(instrument, ': Set appropriate stop ' + request.data + ' ' + json.dumps(assets[instrument]))
         return 'Done'
 
-    assets[instrument]['webhooks'].append(data)
+    assets[instrument]['webhooks'].insert(0, data)
     STOP = assets[instrument]['stop']
     PROP = assets[instrument]['prop']
     LEV = assets[instrument]['lev']
-    tradeResult = tradeAsset(instrument, SIDE, STOP, PROP, LEV)
+    STOPID = assets[instrument]['laststop']
+    tradeResult = tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID)
     if tradeResult:
-        assets[instrument]['webhooks'].append(tradeResult)
+        assets[instrument]['trades'].insert(0, tradeResult)
+        assets[instrument]['laststop'] = tradeResult['STOPID']
+
 
     r.set('assets', json.dumps(assets))
     return 'TRADING VIEW WEBHOOK'
 
-def tradeAsset(instrument, SIDE, STOP, PROP, LEV):
+def tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID):
 
     TS = tradeStatus(instrument, LEV)
     if TS == 'long' and SIDE == 'buy':
         print('NO ACTION ' + instrument)
         return False
 
-    elif TS == 'long' and SIDE == 'sell':
-        tradeData = closeOpen(instrument, STOP, PROP, LEV)
-        if tradeData['error']:
-            addAlert(tradeData['error'])
-            return False
-        return tradeData
-
     elif TS == 'short' and SIDE == 'sell':
         print('NO ACTION ' + instrument)
         return False
 
+
+
+    elif TS == 'long' and SIDE == 'sell':
+        tradeData = closeOpen(instrument, STOP, PROP, LEV, STOPID)
+        if 'error' in tradeData:
+            addAlert(instrument, json.dumps(tradeData))
+            return False
+        return tradeData
+
     elif TS == 'short' and SIDE == 'buy':
-        tradeData = closeOpen(instrument, STOP, PROP, LEV)
-        if tradeData['error']:
-            addAlert(tradeData['error'])
+        tradeData = closeOpen(instrument, STOP, PROP, LEV. STOPID)
+        if 'error' in tradeData:
+            addAlert(instrument, json.dumps(tradeData))
             return False
         return tradeData
 
     elif TS == None:
         tradeData = openPosition(instrument, STOP, PROP, LEV, SIDE)
         if tradeData['error']:
-            addAlert(tradeData['error'])
+            addAlert(instrument, tradeData['error'])
             return False
         return tradeData
 
     else:
-        addAlert(TS)
+        addAlert(instrument, 'tradeStatus: ' + TS)
 
 
+@app.route('/getFunds', methods=['POST'])
+def getFunds():
+        # pw = request.form ['pw']
+    tickerFunds = request.form ['tickerFunds']
 
-
-# @app.route('/getFunds', methods=['POST'])
-# def getFunds():
-#         # pw = request.form ['pw']
-#     tickerFunds = request.form ['tickerFunds']
-
-#     # if pw != PASSWORD:
-#     #     return abort
-#     return apiFunds(tickerFunds)
+    # if pw != PASSWORD:
+    #     return abort
+    return getFunds()
 
 
 # @app.route('/getOrder', methods=['POST'])
@@ -185,14 +210,32 @@ def tradeAsset(instrument, SIDE, STOP, PROP, LEV):
 #     return order
 
 
-# @app.route('/getTicker', methods=['POST'])
-# def getTicker():
-#     # pw = request.form ['pw']
-#     ticker = request.form ['ticker']
+@app.route('/getTicker', methods=['POST'])
+def getTicker():
+    # pw = request.form ['pw']
+    ticker = request.form ['ticker']
 
-#     # if pw != PASSWORD:
-#     #     return abort
-#     return False #apiTicker(ticker)
+    # if pw != PASSWORD:
+    #     return abort
+    return getTicker(ticker)
+
+@app.route('/setAsset', methods=['POST'])
+def setAsset():
+
+    # pw = request.form ['pw']
+    stop = request.form ['stop']
+    ticker = request.form ['ticker']
+    pw = request.form ['pw']
+
+    markPrice = getTicker(ticker)
+    if stop > markPrice / 2:
+        return {'alert' : 'stop is greater than 50% of asset'}
+
+
+
+    # if pw != PASSWORD:
+    #     return abort
+    return
 
 # @app.route('/getAlerts', methods=['POST'])
 # def getAlerts():
@@ -204,36 +247,6 @@ def tradeAsset(instrument, SIDE, STOP, PROP, LEV):
 #     #     return abort
 #     return json.dumps(alerts)
 
-# @app.route('/getLutfi', methods=['POST'])
-# def getLutfi():
-#     print('getLutfi')
-
-#     alerts = r.lrange('lutfi', 0, -1)
-
-#     # if pw != PASSWORD:
-#     #     return abort
-#     return json.dumps(alerts)
-
-# @app.route('/getTrades', methods=['POST'])
-# def getTrades():
-
-#     trades = r.lrange('trades', 0, -1)
-
-#     return json.dumps(trades)
-
-
-
-
-# @app.route("/lutfi", methods=['POST'])
-# def tradingview_lutfi():
-
-#     print(request)
-#     data = json.loads(request.data)
-#     print('TV DATA', data)
-
-#     r.lpush('lufti', json.dumps(data))
-
-#     return 'TRADING VIEW'
 
 
 # @app.route('/getTrade', methods=['POST'])
