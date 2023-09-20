@@ -264,6 +264,7 @@ def openPosition(instrument, STOP, PROP, LEV, SIDE):
     print('STOP NEW POSITION:\n' + stopResult)
 
     STOPORDER = stopRes['sendStatus']['order_id']
+    print('STOP NEW ORDER ' + STOPORDER)
     return {'status': 'close open stop', 'instrument': instrument, 'STOPID': STOPORDER }
 
 
