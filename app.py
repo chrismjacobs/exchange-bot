@@ -4,7 +4,7 @@ import time
 import datetime
 from settings import SECRET_KEY, r, CODE, auth_required
 # from exchangeAPI import apiFunds, apiTicker, apiOrder
-from getAPI import getInstruments, tradeStatus, closeOpen, openPosition, getFunds, getTicker
+from getAPI import getInstruments, tradeStatus, closeOpen, openPosition, getFunds, getTicker, tradeStatus
 
 
 app = Flask(__name__)
@@ -21,16 +21,15 @@ def home():
     return render_template('trading.html', **context)
 
 def addAlert(instrument, msg):
-
-
-
     errors = json.loads(r.get('errors'))
 
     if instrument not in errors:
         errors[instrument] = []
 
+    now = datetime.now()
+    date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
     errorList = errors[instrument]
-    errorList.insert(0, msg)
+    errorList.insert(0, msg + '//' + date_time)
 
     r.set('errors', json.dumps(errors))
     return True
@@ -139,6 +138,7 @@ def tradingview_webhook():
 
     return 'TRADING VIEW WEBHOOK'
 
+
 def tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID):
 
     TS = tradeStatus(instrument, LEV)
@@ -179,60 +179,45 @@ def tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID):
 
 @app.route('/getFunds', methods=['POST'])
 def getFunds():
-        # pw = request.form ['pw']
-    tickerFunds = request.form ['tickerFunds']
+    pw = request.form ['pw']
+    if int(pw) != int(CODE):
+        return {'error' : 'authentication'}
+
 
     # if pw != PASSWORD:
     #     return abort
-    return getFunds()
+    return json.dumps(getFunds())
 
 
-# @app.route('/getOrder', methods=['POST'])
-# def getOrder():
-#     print(request.form)
-#     ORDERTYPE = request.form['mode']
-#     PRICE = request.form['price']
-#     STOP = request.form['stop']
-#     PROFIT = request.form['profit']
-#     SIDE = request.form['side'].lower()
-#     VOLUME = request.form['volume']
-#     print(ORDERTYPE, SIDE, VOLUME, PRICE, STOP, PROFIT)
+@app.route('/getAssets', methods=['POST'])
+def getAssets():
+    pw = request.form ['pw']
+    if int(pw) != int(CODE):
+        return {'error' : 'authentication'}
 
-#     LEV = 0
+    assets = json.loads(r.get('assets'))
+    errors = json.loads(r.get('errors'))
 
-#     order = apiOrder(ORDERTYPE, SIDE, VOLUME, PRICE, LEV)
+    for a in assets:
+        assets[a]['price'] = getTicker(a)
+        assets[a]['position'] = tradeStatus(a, assets[a]['lev'])
+        assets[a]['errors'] = errors[a]
 
-#     #r.lpush('trades', json.dumps(order))
-#     if len(order['error']) == 0 and ORDERTYPE == 'limit':
-#         revSide = 'buy'
-#         if SIDE == revSide:
-#             revSide = 'sell'
-#         print('SETTING STOP')
-#         apiOrder('stop-loss', revSide, VOLUME, STOP, LEV)
-#         # print('SETTING TP')
-#         # apiOrder('take-profit', 'buy', VOLUME, PROFIT, LEV)
-
-#     # if pw != PASSWORD:
-#     #     return abort
-#     return order
+    return json.dumps(assets)
 
 
-@app.route('/getTicker', methods=['POST'])
-def getTicker():
-    # pw = request.form ['pw']
-    ticker = request.form ['ticker']
-
-    # if pw != PASSWORD:
-    #     return abort
-    return getTicker(ticker)
 
 @app.route('/setAsset', methods=['POST'])
 def setAsset():
+    pw = request.form ['pw']
+    if int(pw) != int(CODE):
+        return {'error' : 'authentication'}
 
     # pw = request.form ['pw']
     stop = request.form ['stop']
     ticker = request.form ['ticker']
     pw = request.form ['pw']
+
 
     markPrice = getTicker(ticker)
     if stop > markPrice / 2:
@@ -240,54 +225,14 @@ def setAsset():
 
 
 
-    # if pw != PASSWORD:
-    #     return abort
+
     return
 
-# @app.route('/getAlerts', methods=['POST'])
-# def getAlerts():
-#     print('getAerts')
-
-#     alerts = r.lrange('alerts', 0, -1)
-
-#     # if pw != PASSWORD:
-#     #     return abort
-#     return json.dumps(alerts)
 
 
 
-# @app.route('/getTrade', methods=['POST'])
-# def getTrade():
-#     pw = request.form ['pw']
-
-#     if pw != PASSWORD:
-#         return abort
-
-#     mode = request.form ['mode']
-#     spread = int(request.form ['spread'])
-#     price = int(request.form ['price'])
-#     fraction = float(request.form ['fraction'])
-#     profit = None
 
 
-#     return jsonify({'result' : result, 'mode' : mode})
-
-# @app.route('/getOrder', methods=['POST'])
-# def getOrder():
-#     pw = request.form ['pw']
-
-#     if pw != PASSWORD:
-#         return abort
-
-#     mode = request.form ['mode']
-#     side = request.form ['side']
-#     first = float(request.form ['first'])
-#     spread = float(request.form ['spread'])
-#     ladder = int(request.form ['ladder'])
-#     fraction = float(request.form ['fraction'])
-#     profit = float(request.form ['profit'])
-#     stop = float(request.form ['stop'])
-#     leverage = float(request.form ['leverage'])
 
 
 if __name__ == '__main__':

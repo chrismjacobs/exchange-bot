@@ -1,7 +1,7 @@
 import os
 import json
 import krakenAPI as kAPI
-import datetime
+from datetime import datetime
 from settings import API_KEY_KRAKEN, API_SEC_KRAKEN, APIPATH
 
 
@@ -207,7 +207,8 @@ def closeOpen(instrument, STOP, PROP, LEV, STOPID):
                 "stopPrice" : STOPPRICE,
                 "triggerSignal": "mark_price",
                 "cliOrdId": STOPID,
-                "reduceOnly": "true"
+                "reduceOnly": "true",
+                "triggerSignal" : "mark"
             }
 
             stopResult = cfPrivate.send_order_1(stopOrder)
@@ -218,8 +219,9 @@ def closeOpen(instrument, STOP, PROP, LEV, STOPID):
                 return {'error': stopResult, 'instrument': instrument}
             print('STOP POSITION:\n' + stopResult)
             STOPORDER = stopRes['sendStatus']['order_id']
-
-            return {'status': 'close open stop', 'instrument': instrument, 'STOPID': STOPORDER }
+            now = datetime.now()
+            date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
+            return {'status': 'CLOSE/OPEN ' + SIDE.upper(), 'instrument': instrument, 'STOPID': STOPORDER, 'TIME': date_time }
 
 
 def openPosition(instrument, STOP, PROP, LEV, SIDE):
@@ -254,7 +256,8 @@ def openPosition(instrument, STOP, PROP, LEV, SIDE):
         "size": SIZE,
         "stopPrice" : STOPPRICE,
         "cliOrdId": STOPID,
-        "reduceOnly": "true"
+        "reduceOnly": "true",
+        "triggerSignal" : "mark"
     }
 
     stopResult = cfPrivate.send_order_1(stopOrder)
@@ -267,7 +270,10 @@ def openPosition(instrument, STOP, PROP, LEV, SIDE):
 
     STOPORDER = stopRes['sendStatus']['order_id']
     print('STOP NEW ORDER ' + STOPORDER)
-    return {'status': 'START NEW POSITION', 'instrument': instrument, 'STOPID': STOPORDER }
+
+    now = datetime.now()
+    date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
+    return {'status': 'START NEW POSITION', 'instrument': instrument, 'STOPID': STOPORDER, 'TIME': date_time}
 
 
 instrument = 'pf_xbtusd'
