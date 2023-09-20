@@ -125,14 +125,14 @@ def tradingview_webhook():
     STOPID = assets[instrument]['laststop']
     tradeResult = tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID)
     print('TRADE RESULT ', tradeResult)
-    if 'error' not in tradeResult:
+    try:
         assets[instrument]['webhooks'].insert(0, data)
         assets[instrument]['trades'].insert(0, tradeResult)
         assets[instrument]['laststop'] = tradeResult['STOPID']
         r.set('assets', json.dumps(assets))
-    else:
-        addAlert(instrument, 'Trade Error: ' + tradeResult)
-        return 'Done'
+    except Exception as e:
+        print('EXECTION ON TRADE RESULT ' + e)
+
 
 
 
@@ -149,31 +149,31 @@ def tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID):
         print('NO ACTION ' + instrument)
         return False
 
-
-
     elif TS == 'long' and SIDE == 'sell':
         tradeData = closeOpen(instrument, STOP, PROP, LEV, STOPID)
         if 'error' in tradeData:
-            addAlert(instrument, json.dumps(tradeData))
+            addAlert(instrument, tradeData)
             return False
         return tradeData
 
     elif TS == 'short' and SIDE == 'buy':
         tradeData = closeOpen(instrument, STOP, PROP, LEV. STOPID)
         if 'error' in tradeData:
-            addAlert(instrument, json.dumps(tradeData))
+            addAlert(instrument, tradeData)
             return False
         return tradeData
 
     elif TS == None:
         tradeData = openPosition(instrument, STOP, PROP, LEV, SIDE)
-        if tradeData['error']:
-            addAlert(instrument, tradeData['error'])
+        print('New Postion ', tradeData)
+        if 'error' in tradeData:
+            addAlert(instrument, tradeData)
             return False
         return tradeData
 
     else:
         addAlert(instrument, 'tradeStatus: ' + TS)
+        return False
 
 
 @app.route('/getFunds', methods=['POST'])

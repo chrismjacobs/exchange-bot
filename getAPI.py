@@ -265,7 +265,7 @@ def openPosition(instrument, STOP, PROP, LEV, SIDE):
 
     STOPORDER = stopRes['sendStatus']['order_id']
     print('STOP NEW ORDER ' + STOPORDER)
-    return {'status': 'close open stop', 'instrument': instrument, 'STOPID': STOPORDER }
+    return {'status': 'START NEW POSITION', 'instrument': instrument, 'STOPID': STOPORDER }
 
 
 instrument = 'pf_xbtusd'
