@@ -100,7 +100,7 @@ def tradingview_webhook():
             'lev' : 5,
             'prop' : 80,
             'stop' : 200,
-            'webhooks' : [json.dumps(data)],
+            'webhooks' : [data],
             'trades' : [],
             'laststop' : 0
         }
@@ -124,12 +124,18 @@ def tradingview_webhook():
     LEV = assets[instrument]['lev']
     STOPID = assets[instrument]['laststop']
     tradeResult = tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID)
-    if tradeResult:
+    print('TRADE RESULT ', tradeResult)
+    if 'error' not in tradeResult:
+        assets[instrument]['webhooks'].insert(0, data)
         assets[instrument]['trades'].insert(0, tradeResult)
         assets[instrument]['laststop'] = tradeResult['STOPID']
+        r.set('assets', json.dumps(assets))
+    else:
+        addAlert(instrument, 'Trade Error: ' + tradeResult)
+        return 'Done'
 
 
-    r.set('assets', json.dumps(assets))
+
     return 'TRADING VIEW WEBHOOK'
 
 def tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID):
