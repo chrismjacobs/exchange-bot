@@ -278,8 +278,8 @@ STOPID= "143d2d66-c82e-49fc-8b12-117aad9127fd"
 SIDE='buy'
 ORDERID = "143d2d66-c82e-49fc-8b12-117aad9127fd"
 
-lev = cfPrivate.get_leverage()
-print(lev)
+# getInstruments('XRP')
+
 # closeOpen(instrument, STOP, PROP, LEV, STOPID)
 # getAllocation(instrument, PROP, LEV, None)
 # result = cfPrivate.cancel_order(STOPID)
