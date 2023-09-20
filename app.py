@@ -59,7 +59,7 @@ def tradingview_webhook():
         data = json.loads(request.data)
     except Exception as e:
         print('DATA LOAD EXCEPTION')
-        addAlert('tradingview', e)
+        addAlert('tradingview', str(e))
         return 'ERROR'
     print('TV DATA', data)
     print('TV DATA', type(data))
@@ -93,7 +93,7 @@ def tradingview_webhook():
     assets = json.loads(r.get('assets'))
     errors = json.loads(r.get('errors'))
 
-    print(assets)
+    print(assets.keys())
 
     if instrument not in assets:
         assets[instrument] = {
@@ -126,12 +126,13 @@ def tradingview_webhook():
     tradeResult = tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID)
     print('TRADE RESULT ', tradeResult)
     try:
-        assets[instrument]['webhooks'].insert(0, data)
-        assets[instrument]['trades'].insert(0, tradeResult)
-        assets[instrument]['laststop'] = tradeResult['STOPID']
-        r.set('assets', json.dumps(assets))
+        if tradeResult != False:
+            assets[instrument]['webhooks'].insert(0, data)
+            assets[instrument]['trades'].insert(0, tradeResult)
+            assets[instrument]['laststop'] = tradeResult['STOPID']
+            r.set('assets', json.dumps(assets))
     except Exception as e:
-        print('EXECTION ON TRADE RESULT ' + e)
+        print('EXCEPTION ON TRADE RESULT ', e)
 
 
 

@@ -206,7 +206,8 @@ def closeOpen(instrument, STOP, PROP, LEV, STOPID):
                 "size": SIZE,
                 "stopPrice" : STOPPRICE,
                 "triggerSignal": "mark_price",
-                "cliOrdId": STOPID
+                "cliOrdId": STOPID,
+                "reduceOnly": "true"
             }
 
             stopResult = cfPrivate.send_order_1(stopOrder)
@@ -252,7 +253,8 @@ def openPosition(instrument, STOP, PROP, LEV, SIDE):
         "side": STOPSIDE,
         "size": SIZE,
         "stopPrice" : STOPPRICE,
-        "cliOrdId": STOPID
+        "cliOrdId": STOPID,
+        "reduceOnly": "true"
     }
 
     stopResult = cfPrivate.send_order_1(stopOrder)
@@ -276,6 +278,8 @@ STOPID= "143d2d66-c82e-49fc-8b12-117aad9127fd"
 SIDE='buy'
 ORDERID = "143d2d66-c82e-49fc-8b12-117aad9127fd"
 
+lev = cfPrivate.get_leverage()
+print(lev)
 # closeOpen(instrument, STOP, PROP, LEV, STOPID)
 # getAllocation(instrument, PROP, LEV, None)
 # result = cfPrivate.cancel_order(STOPID)
