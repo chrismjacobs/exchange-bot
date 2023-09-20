@@ -158,7 +158,7 @@ def tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID):
         return tradeData
 
     elif TS == 'short' and SIDE == 'buy':
-        tradeData = closeOpen(instrument, STOP, PROP, LEV. STOPID)
+        tradeData = closeOpen(instrument, STOP, PROP, LEV, STOPID)
         if 'error' in tradeData:
             addAlert(instrument, tradeData)
             return False
