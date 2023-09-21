@@ -23,11 +23,15 @@ def home():
 def addAlert(instrument, msg):
     errors = json.loads(r.get('errors'))
 
-    if instrument not in errors:
-        errors[instrument] = []
-
     now = datetime.now()
     date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
+
+    if 'misc' not in errors:
+        errors['misc'] = []
+
+    if instrument not in errors:
+        errors['misc'].insert(0, msg + '//' + date_time)
+
     errorList = errors[instrument]
     errorList.insert(0, msg + '//' + date_time)
 
@@ -38,7 +42,7 @@ def addAlert(instrument, msg):
 def checkTicker(ticker):
     print('CHECK TICKER')
     if 'USD' not in ticker:
-        addAlert('USD not found in ticker')
+        addAlert(ticker, 'USD not found in ticker')
         return False
 
     asset = ticker.split('USD')[0]
