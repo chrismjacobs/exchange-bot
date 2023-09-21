@@ -204,6 +204,7 @@ def getAssets():
     for a in assets:
         assets[a]['price'] = getTicker(a)
         TSlist = tradeStatus(a)
+        print(TSlist)
         assets[a]['position'] = TSlist[0]
         assets[a]['lastlev'] = TSlist[1]
         assets[a]['errors'] = errors[a]
@@ -216,7 +217,7 @@ def getAssets():
 def setAsset():
     pw = request.form ['pw']
     if int(pw) != int(CODE):
-        return {'error' : 'authentication'}
+        return {'error' : 'authentication error'}
 
     # pw = request.form ['pw']
     asset = request.form['asset']
@@ -225,8 +226,13 @@ def setAsset():
     prop = request.form['prop']
 
     assets = json.loads(r.get('assets'))
+    assets[asset]['stop'] = stop
+    assets[asset]['lev'] = lev
+    assets[asset]['prop'] = prop
 
-    return False
+    r.set('assets', json.dumps(assets))
+
+    return {'success' : 'assets updated'}
 
 
 

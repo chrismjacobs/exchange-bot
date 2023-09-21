@@ -85,7 +85,7 @@ def getTicker(instrument):
 
 
 def tradeStatus(instrument):
-    print('tradeStatus')
+    print('tradeStatus ' + instrument)
     result = cfPrivate.get_openpositions()
     res = json.loads(result)
     if res['result'] and res['result'] != 'success':
@@ -99,7 +99,7 @@ def tradeStatus(instrument):
 
     print('tradeStatus: No Postion Found')
     ## no tradeStatus found
-    return None
+    return [None, None]
 
 def getAllocation(instrument, PROP, LEV, OPENSIZE):
 
