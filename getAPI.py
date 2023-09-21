@@ -47,16 +47,17 @@ def getFunds():
 def getInstruments(asset):
     result = cfPublic.get_instruments()
     #print("get_instruments:\n", result)
-    print('getInstruments: ' + asset)
+    print('getInstruments: ' + asset + ':\n' + result)
     resultDict = json.loads(result)
-    for i in resultDict['instruments']:
-        # print(i['symbol'])
-        if asset.lower() in i['symbol'] and 'pf' in i['symbol']:
-            print('getInstruments: Asset Found ' + i['symbol'])
-            return i['symbol']
-        if asset == 'BTC':
-            print('found pf_xbtusd')
-            return 'pf_xbtusd'
+    if 'instruments' in resultDict:
+        for i in resultDict['instruments']:
+            # print(i['symbol'])
+            if asset.lower() in i['symbol'] and 'pf' in i['symbol']:
+                print('getInstruments: Asset Found ' + i['symbol'])
+                return i['symbol']
+            if asset == 'BTC':
+                print('found pf_xbtusd')
+                return 'pf_xbtusd'
 
     return None
 
