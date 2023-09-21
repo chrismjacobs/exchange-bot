@@ -4,7 +4,7 @@ import time
 import datetime
 from settings import SECRET_KEY, r, CODE, auth_required
 # from exchangeAPI import apiFunds, apiTicker, apiOrder
-from getAPI import getInstruments, tradeStatus, closeOpen, openPosition, getFunds, getTicker, tradeStatus
+from getAPI import getInstruments, tradeStatus, closeOpen, openPosition, getFunds, getTicker
 
 
 app = Flask(__name__)
@@ -143,7 +143,8 @@ def tradingview_webhook():
 
 def tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID):
 
-    TS = tradeStatus(instrument, LEV)
+    TSlist = tradeStatus(instrument)
+    TS = TSlist[0]
     if TS == 'long' and SIDE == 'buy':
         print('NO ACTION ' + instrument)
         return False
@@ -202,7 +203,9 @@ def getAssets():
 
     for a in assets:
         assets[a]['price'] = getTicker(a)
-        assets[a]['position'] = tradeStatus(a, assets[a]['lev'])
+        TSlist = tradeStatus(a)
+        assets[a]['position'] = TSlist[0]
+        assets[a]['lastlev'] = TSlist[1]
         assets[a]['errors'] = errors[a]
 
     return json.dumps(assets)
@@ -216,14 +219,14 @@ def setAsset():
         return {'error' : 'authentication'}
 
     # pw = request.form ['pw']
-    stop = request.form ['stop']
-    ticker = request.form ['ticker']
-    pw = request.form ['pw']
+    asset = request.form['asset']
+    stop = request.form['stop']
+    lev = request.form['lev']
+    prop = request.form['prop']
+
+    assets = json.loads(r.get('assets'))
 
 
-    markPrice = getTicker(ticker)
-    if stop > markPrice / 2:
-        return {'alert' : 'stop is greater than 50% of asset'}
 
 
 

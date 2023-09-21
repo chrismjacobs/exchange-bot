@@ -84,7 +84,7 @@ def getTicker(instrument):
             return t['markPrice']
 
 
-def tradeStatus(instrument, LEV):
+def tradeStatus(instrument):
     print('tradeStatus')
     result = cfPrivate.get_openpositions()
     res = json.loads(result)
@@ -94,12 +94,10 @@ def tradeStatus(instrument, LEV):
     for p in res['openPositions']:
         if p['symbol'] == instrument:
             print('tradeStatus found:\n ' + instrument + ' ' + p['side'] + '\n' + str(p))
-            openLEV = p['maxFixedLeverage']
-            if openLEV != LEV:
-                return instrument + ': Double check leverage is same as exchange'
-            else:
-                return p['side']
 
+            return [p['side'], p['maxFixedLeverage']]
+
+    print('tradeStatus: No Postion Found')
     ## no tradeStatus found
     return None
 
