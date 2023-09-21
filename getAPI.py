@@ -47,7 +47,7 @@ def getFunds():
 def getInstruments(asset):
     result = cfPublic.get_instruments()
     #print("get_instruments:\n", result)
-    print('getInstruments: ' + asset + ':\n' + result)
+    print('getInstruments: ' + asset)
     resultDict = json.loads(result)
     if 'instruments' in resultDict:
         for i in resultDict['instruments']:
@@ -58,6 +58,8 @@ def getInstruments(asset):
             if asset == 'BTC':
                 print('found pf_xbtusd')
                 return 'pf_xbtusd'
+    else:
+        print('getInstruments Error: ' + asset + ':\n' + result)
 
     return None
 
