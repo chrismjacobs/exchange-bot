@@ -96,12 +96,13 @@ def tradingview_webhook():
 
     if instrument not in assets:
         assets[instrument] = {
-            'lev' : 5,
-            'prop' : 80,
-            'stop' : 200,
+            'lev' : 2,
+            'prop' : 0,
+            'stop' : 100,
             'webhooks' : [data],
             'trades' : [],
-            'laststop' : 0
+            'laststop' : 0,
+            'lastprop' : 0,
         }
         errors[instrument] = []
         r.set('assets', json.dumps(assets))
@@ -129,6 +130,7 @@ def tradingview_webhook():
             assets[instrument]['webhooks'].insert(0, data)
             assets[instrument]['trades'].insert(0, tradeResult)
             assets[instrument]['laststop'] = tradeResult['STOPID']
+            assets[instrument]['lastprop'] = PROP
             r.set('assets', json.dumps(assets))
     except Exception as e:
         print('EXCEPTION ON TRADE RESULT ', e)
