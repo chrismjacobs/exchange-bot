@@ -51,7 +51,7 @@ def getInstruments(asset):
     resultDict = json.loads(result)
     for i in resultDict['instruments']:
         print(i['symbol'])
-        if asset in i['symbol'] and 'pf' in i['symbol']:
+        if asset.lower() in i['symbol'] and 'pf' in i['symbol']:
             print('getInstruments: Asset Found ' + i['symbol'])
             return i['symbol']
         if asset == 'BTC':

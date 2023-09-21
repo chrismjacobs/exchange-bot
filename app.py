@@ -44,7 +44,7 @@ def checkTicker(ticker):
     asset = ticker.split('USD')[0]
     instrument = getInstruments(asset)
     if instrument == None:
-        addAlert('Asset not found on Kraken futures')
+        addAlert(ticker, 'Asset not found on Kraken futures')
         return False
 
     return instrument
@@ -226,9 +226,9 @@ def setAsset():
     prop = request.form['prop']
 
     assets = json.loads(r.get('assets'))
-    assets[asset]['stop'] = stop
-    assets[asset]['lev'] = lev
-    assets[asset]['prop'] = prop
+    assets[asset]['stop'] = int(stop)
+    assets[asset]['lev'] = int(lev)
+    assets[asset]['prop'] = int(prop)
 
     r.set('assets', json.dumps(assets))
 
