@@ -44,7 +44,7 @@
                     </tr>
                     <tr>
                         <th class="" scope="row"><span @click="">Code</span> </th>
-                        <td class="text-warning" scope="row"><input class="text-warning bg-dark" type="int" v-model="passcode"></input> <span class="text-danger">[[codeNotice]]</span> </td>
+                        <td class="text-warning" scope="row"><input class="text-light bg-dark" type="int" v-model="passcode"></input> <span class="text-danger">[[codeNotice]]</span> </td>
                     </tr>
 
                 </tbody>
@@ -56,7 +56,7 @@
                 <table class="table table-dark" class="table-responsive">
                     <thead>
                     <tr>
-                        <th scope="col" style="width:10%">Asset</th>
+                        <th class="bg-dark" scope="col" style="width:10%">Asset</th>
                         <th scope="col" style="width:15%">Lev(x)</th>
                         <th scope="col" style="width:15%">Stop(Tick)</th>
                         <th scope="col" style="width:15%">Prop(%)</th>
@@ -69,14 +69,14 @@
                 <tbody>
                     <template v-for="(item, key) in assets" :key="key" >
                         <tr class="">
-                            <th class="text-success text-xsmall" scope="row"><span>[[key.toUpperCase() ]]</span> </th>
-                            <td class="" ><span v-if="editAsset == key"> <input class="text-warning bg-dark" type="int"  v-model="parameters.lev"></input></span><span v-else>[[item.lev]]<span></td>
-                            <td class="" ><span v-if="editAsset == key"> <input class="text-warning bg-dark" type="int"  v-model="parameters.stop"></input></span><span v-else>[[item.stop]]<span></td>
-                            <td class="" ><span v-if="editAsset == key"> <input class="text-warning bg-dark" type="int"  v-model="parameters.prop"></input></span><span v-else>[[item.prop]]<span></td>
+                            <th :class="getSideColor(key)" scope="row"><span>[[key.toUpperCase() ]]</span> </th>
+                            <td class="" ><span v-if="editAsset == key"> <input :class="getSideColor(key)" type="number"  v-model="parameters.lev"></input></span><span v-else>[[item.lev]]<span></td>
+                            <td class="" ><span v-if="editAsset == key"> <input :class="getSideColor(key)" type="number"  v-model="parameters.stop"></input></span><span v-else>[[item.stop]]<span></td>
+                            <td class="" ><span v-if="editAsset == key"> <input :class="getSideColor(key)" type="number"  v-model="parameters.prop"></input></span><span v-else>[[item.prop]]<span></td>
                             <td class="" ><span>[[item.price]]</span></td>
-                            <td class="" ><span>[[item.position]]</span></td>
+                            <td class="" ><span>[[item.position]] <span v-if="item.position">([[item.lastlev]]x  [[item.lastprop]]%)</span></span></td>
                             <td class="">
-                                <button @click="edit(key)" type="button" class="btn btn btn-secondary">
+                                <button @click="editSave(key)" type="button" class="btn btn btn-secondary">
                                     <span v-if="editAsset == key"> Save </span>  <span v-else> Edit </span>
                                 </button>
                             </td>
@@ -171,6 +171,8 @@ let vue = new Vue({
         alerts: [],
         trades: [],
         funds: '==',
+        liquidation: '',
+        stop: '',
         passcode: 123,
         assets: {},
         errors: {},
@@ -182,8 +184,30 @@ let vue = new Vue({
         parameters: {
             lev : '',
             stop : '',
-            prop : '',
-            prop : '',
+            prop : ''
+        },
+        usernotes: {
+            LEVERAGE : 'Exchange leverage cannot be controlled by the bot',
+            l2 : 'User must make sure exchange leverage and bot leverage is the same for position size calculation',
+            l3 : 'Leverage cannot be changed while a position is open',
+            PROPORTION : 'Proportion of funds allocated to each asset is in %',
+            p1 : 'Note: 5% of account will always be left available to avoid insufficient balance error',
+            p2 : 'When changing proportion alloacation of an asset, the reblance will occur when a new position is opened',
+            p3 : 'Changing proportions on assets may be blocked if the new proportions conflict with current open position allocations',
+            p4 : '!! If you remove funds from your collateral on the exchange while positions are open, you may get an insufficientFunds error if another asset tries to open a new position',
+            TRADINGVIEW : 'Alerts set once per bar close on hourly timeframe, alert message must use the following json format for buy or sell:',
+            t1 : '{"TICKER":"{{ticker}}", "SIDE":"buy", "TVCODE":"...", "TIME":"{{time}}", "TF":"{{interval}}"}',
+            t2 : '{"TICKER":"{{ticker}}", "SIDE":"sell", "TVCODE":"...", "TIME":"{{time}}", "TF":"{{interval}}"}',
+            t3 : 'TVCODE must match app environment variable',
+            STOP : 'Stop is measured by ticks on the asset',
+            s1 : 'Stop calculation cannot be too close or more than estimated liquidation price',
+            s2 : 'Stop must be greater than 0.5% of price',
+            KRAKEN : 'You can still interact with Kraken exchange manually',
+            k1 : 'You can move the set stoploss or open a new position',
+            k2 : 'If you add stop loss manually that will not be found and removed by the bot so must remove it manually',
+            k3 : 'If you add a position manually you must calculate the proportion in accordance with what is set on the bot for that asset',
+            k4 : 'If you add a position on an asset that is not assigned to the bot, account for the proportion of funds that are not available to the bot when setting bot assigned proportions',
+
         }
     },
     methods: {
@@ -199,22 +223,56 @@ let vue = new Vue({
                 this.showData = '--'
             }
         },
-        edit: function (asset) {
-            assetOBJ = this.assets[asset]
-            params = this.parameters
+        editSave: function (asset) {
+            let assetOBJ = this.assets[asset]
+            let params = this.parameters
             if (this.editAsset != '' && assetOBJ['lev'] != params['lev']){
+                console.log(params['lev'])
                 if (params['position'] == 'short' || params['position'] == 'long') {
                     alert('Cannot change leverage while position is open\nplease close position and make sure leverage on exchange and bot is the same')
+                    return false
                 }
-                if (params['lev'] < 2 || !Number.isInteger(!params['lev'])) {
-                    alert('Levarage should be >2')
+                if (params['lev'] < 2) {
+                    alert('Levarage should be > 1')
+                    return false
                 }
-                return false
+
+            }
+            if (this.editAsset != '' && assetOBJ['stop'] != params['stop']){
+                let price = assetOBJ['price']
+                let lev = params['lev']
+                let liquidation = price - (price / lev + 0.2 )
+                let stopCalc = price - params['stop']
+                let onePrct = price - price*0.005
+                this.liquidation = liquidation
+                this.stop = stopCalc
+                console.log(liquidation)
+                if (stopCalc < liquidation) {
+                    alert('Stop is less than liquidation price')
+                    return false
+                } else if (params['stop'] <= 0) {
+                    alert('Stop cannot be zero')
+                    return false
+                }
+
+            }
+            if (this.editAsset != '' && assetOBJ['prop'] != params['prop']){
+
+                totProp = 0
+                /// calculate prop
+                if (totProp > 100) {
+                    alert('Proportion balance to large; please close open positions to allow bot to rebalance correctly')
+                    return false
+                }
+
             }
 
 
-            if (this.editAsset == asset) {
+            if (this.editAsset == asset && this.params) {
+                let set = this.setAsset(asset)
                 this.editAsset = ''
+                this.stop = ''
+                this.liquidation = ''
             } else {
                 this.editAsset = asset
             }
@@ -243,14 +301,26 @@ let vue = new Vue({
                 return "row align-items-start m-1 rounded"
             }
         },
-        getSideColor: function () {
-            if (this.orderData.side == 'Buy') {
-                return 'background:mediumseagreen'
-            } else if (this.orderData.side == 'Sell'){
-                return 'background:coral'
-            } else {
-                return 'background:grey'
+        getSideColor: function (asset) {
+            let styles = {
+                1 : "text-success text-xsmall bg-dark",
+                2 : "text-info text-xsmall bg-dark",
+                3 : "text-warning text-xsmall bg-dark",
+                4 : "text-white text-xsmall bg-dark",
+                5 : "text-success text-xsmall bg-dark",
+                6 : "text-info text-xsmall bg-dark",
+                7 : "text-warning text-xsmall bg-dark",
+                8 : "text-white text-xsmall bg-dark"
             }
+            let count = 1
+            for (let a in this.assets) {
+                console.log(a)
+                if (a == asset) {
+                    return styles[count]
+                }
+                count += 1
+            }
+            return styles[8]
         },
         getLevStyle: function () {
             if (this.orderData.leverage < 1) {
@@ -346,6 +416,32 @@ let vue = new Vue({
             .fail(function(){
                   alert('error has occurred getAssets');
             });
+        },
+        setAsset: function (asset) {
+            console.log('setAssets', this.parameters)
+
+            params = this.parameters
+
+
+            $.ajax({
+                data : {
+                    pw: this.passcode,
+                    asset: asset,
+                    stop: params['stop'],
+                    lev: params['lev'],
+                    prop: params['prop']
+                },
+                type : 'POST',
+                url : '/setAsset'
+
+            })
+            .done(function(data) {
+                console.log(data)
+                location.reload()
+            })
+            .fail(function(){
+                  alert('error has occurred getAssets');
+            });
         }
     },
     computed: {
@@ -360,18 +456,14 @@ let vue = new Vue({
                     prop : '',
                     position : '',
                 }
+            } else {
+                asset = this.assets[this.editAsset]
+                this.parameters['lev'] = asset['lev']
+                this.parameters['stop'] = asset['stop']
+                this.parameters['prop'] = asset['prop']
+                this.parameters['position'] = asset['position']
             }
-
-            console.log('watch', this.btc)
-            asset = this.assets[this.editAsset]
-            this.parameters['lev'] = asset['lev']
-            this.parameters['stop'] = asset['stop']
-            this.parameters['prop'] = asset['prop']
-            this.parameters['position'] = asset['position']
-        },
-        getStopLoss: function () {
-            this.getRR()
-        },
+        }
     }
 
 })// end NEW VUE

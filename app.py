@@ -98,7 +98,7 @@ def tradingview_webhook():
         assets[instrument] = {
             'lev' : 2,
             'prop' : 0,
-            'stop' : 100,
+            'stop' : 0,
             'webhooks' : [data],
             'trades' : [],
             'laststop' : 0,
@@ -109,13 +109,7 @@ def tradingview_webhook():
         r.set('errors', json.dumps(errors))
         return 'Done'
     elif assets[instrument]['prop'] == 0:
-        addAlert(instrument, ': No allocation proportion set ' + request.data + ' ' + json.dumps(assets[instrument]))
-        return 'Done'
-    elif assets[instrument]['lev'] < 2:
-        addAlert(instrument, ': Double check leverage is same as exchange (>2) ' + request.data + ' ' + json.dumps(assets[instrument]))
-        return 'Done'
-    elif assets[instrument]['stop'] == 1:
-        addAlert(instrument, ': Set appropriate stop ' + request.data + ' ' + json.dumps(assets[instrument]))
+        addAlert(instrument, ': No allocation proportion set ' +  ' ' + json.dumps(assets[instrument]))
         return 'Done'
 
     assets[instrument]['webhooks'].insert(0, data)
@@ -226,9 +220,9 @@ def setAsset():
     prop = request.form['prop']
 
     assets = json.loads(r.get('assets'))
-    assets[asset]['stop'] = int(stop)
-    assets[asset]['lev'] = int(lev)
-    assets[asset]['prop'] = int(prop)
+    assets[asset]['stop'] = float(stop)
+    assets[asset]['lev'] = float(lev)
+    assets[asset]['prop'] = float(prop)
 
     r.set('assets', json.dumps(assets))
 

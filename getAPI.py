@@ -50,7 +50,7 @@ def getInstruments(asset):
     print('getInstruments: ' + asset)
     resultDict = json.loads(result)
     for i in resultDict['instruments']:
-        print(i['symbol'])
+        # print(i['symbol'])
         if asset.lower() in i['symbol'] and 'pf' in i['symbol']:
             print('getInstruments: Asset Found ' + i['symbol'])
             return i['symbol']
@@ -267,12 +267,12 @@ def openPosition(instrument, STOP, PROP, LEV, SIDE):
     stopRes = json.loads(stopResult)
     if len(stopRes['sendStatus']) < 2:
         #{'result': 'success', 'sendStatus': {'status': 'invalidSize'}, 'serverTime': '2023-09-19T07:01:43.680Z'}
-        print('stopNewOrder Error: ' + stopRes['sendStatus'])
+        print('stopNewOrder Error: ' + str(stopRes['sendStatus']))
         return {'error': stopResult, 'instrument': instrument}
     print('STOP NEW POSITION:\n' + stopResult)
 
     STOPID = stopRes['sendStatus']['order_id']
-    print('STOP NEW ORDER ' + STOPORDER)
+    print('STOP NEW ORDER ' + STOPID)
 
     now = datetime.now()
     date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
