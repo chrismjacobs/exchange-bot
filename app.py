@@ -130,6 +130,9 @@ def tradingview_webhook():
             assets[instrument]['laststop'] = tradeResult['STOPID']
             assets[instrument]['lastprop'] = PROP
             r.set('assets', json.dumps(assets))
+        else:
+            assets[instrument]['webhooks'].insert(0, data)
+
     except Exception as e:
         print('EXCEPTION ON TRADE RESULT ', e)
 
