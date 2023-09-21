@@ -226,12 +226,7 @@ def setAsset():
 
     assets = json.loads(r.get('assets'))
 
-
-
-
-
-
-    return
+    return False
 
 
 
