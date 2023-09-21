@@ -139,7 +139,7 @@ def getStopPrice(instrument, STOP, SIDE):
     print('getStopPrice: ' + str(STOPPRICE))
     return STOPPRICE
 
-def closeOpen(instrument, STOP, PROP, LEV, STOPID):
+def closeOpen(instrument, STOP, PROP, LEV, STOPCANCEL):
     result = cfPrivate.get_openpositions()
     res = json.loads(result)
     for p in res['openPositions']:
@@ -177,7 +177,7 @@ def closeOpen(instrument, STOP, PROP, LEV, STOPID):
             print('CLOSE POSITION:\n' + closeResult)
 
             ### Close last stop order
-            result = cfPrivate.cancel_order(STOPID)
+            result = cfPrivate.cancel_order(STOPCANCEL)
             print("cancel_order:\n", result)
 
             SIZE = getAllocation(instrument, PROP, LEV, p['size'])
@@ -196,8 +196,10 @@ def closeOpen(instrument, STOP, PROP, LEV, STOPID):
                 return {'error': openResult, 'instrument': instrument}
             print('OPEN POSITION:\n' + openResult)
 
+            OPENID = openRes['sendStatus']['order_id']
+
             STOPPRICE = getStopPrice(instrument, STOP, SIDE)
-            STOPID = instrument + '_' + str(STOPPRICE)
+            CLIENTID = instrument + '_' + str(STOPPRICE)
 
             stopOrder = {
                 "orderType": "stp",
@@ -206,7 +208,7 @@ def closeOpen(instrument, STOP, PROP, LEV, STOPID):
                 "size": SIZE,
                 "stopPrice" : STOPPRICE,
                 "triggerSignal": "mark_price",
-                "cliOrdId": STOPID,
+                "cliOrdId": CLIENTID,
                 "reduceOnly": "true",
                 "triggerSignal" : "mark"
             }
@@ -218,10 +220,11 @@ def closeOpen(instrument, STOP, PROP, LEV, STOPID):
                 print('stopOrder Error: ' + str(stopRes['sendStatus']))
                 return {'error': stopResult, 'instrument': instrument}
             print('STOP POSITION:\n' + stopResult)
-            STOPORDER = stopRes['sendStatus']['order_id']
+
+            STOPID = stopRes['sendStatus']['order_id']
             now = datetime.now()
             date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
-            return {'status': 'CLOSE/OPEN ' + SIDE.upper(), 'instrument': instrument, 'STOPID': STOPORDER, 'TIME': date_time }
+            return {'TIME': date_time, 'status': 'CLOSE/OPEN ' + SIDE.upper(), 'instrument': instrument, 'STOPID': STOPID, 'OPENID': OPENID }
 
 
 def openPosition(instrument, STOP, PROP, LEV, SIDE):
@@ -247,15 +250,17 @@ def openPosition(instrument, STOP, PROP, LEV, SIDE):
         return {'error': openResult, 'instrument': instrument}
     print('OPEN NEW POSITION:\n' + openResult)
 
+    OPENID = openRes['sendStatus']['order_id']
+
     STOPPRICE = getStopPrice(instrument, STOP, SIDE)
-    STOPID = instrument + '_' + str(STOPPRICE)
+    CLIENTID = instrument + '_' + str(STOPPRICE)
     stopOrder = {
         "orderType": "stp",
         "symbol": instrument,
         "side": STOPSIDE,
         "size": SIZE,
         "stopPrice" : STOPPRICE,
-        "cliOrdId": STOPID,
+        "cliOrdId": CLIENTID,
         "reduceOnly": "true",
         "triggerSignal" : "mark"
     }
@@ -268,12 +273,12 @@ def openPosition(instrument, STOP, PROP, LEV, SIDE):
         return {'error': stopResult, 'instrument': instrument}
     print('STOP NEW POSITION:\n' + stopResult)
 
-    STOPORDER = stopRes['sendStatus']['order_id']
+    STOPID = stopRes['sendStatus']['order_id']
     print('STOP NEW ORDER ' + STOPORDER)
 
     now = datetime.now()
     date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
-    return {'status': 'START NEW POSITION', 'instrument': instrument, 'STOPID': STOPORDER, 'TIME': date_time}
+    return {'TIME': date_time, 'status': 'START NEW POSITION', 'instrument': instrument, 'STOPID': STOPID, 'OPENID': OPENID }
 
 
 instrument = 'pf_xbtusd'

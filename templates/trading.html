@@ -17,154 +17,104 @@
         <div id="vue-app" style="background:black">
             <div :class="getMargin()" id="tradingdesk">
 
-                <div class="text-white bg-black">
-                    <br>
-
-                    <h1 class="m-3 text-white" @click="goTo('')">  PetraTechs: Trading Desk </h1>
-                </div>
-
-                <div :class="getTradeDiv()">
-
-                    <div class="col m-2 rounded" :style="getSideColor()">
-
-                        <h3 class="mt-3 mb-2"> Trade </h3>
-
-                        <div class="input-group mb-3">
-                            <button @click="getTicker()" class="btn btn-secondary" type="button">Pair</button>
-                            <input type="text" class="form-control" v-model="ticker">
-                        </div>
-
-                        <div class="input-group mb-3">
-                            <button @click="setOrder('Buy')" class="btn btn-secondary" type="button">Buy</button>
-                            <button @click="setOrder('Sell')" class="btn btn-secondary" type="button">Sell</button>
-                            <button @click="clearPrice()" class="btn btn-secondary" type="button">&#9746</button>
-                            <input type="number" class="form-control" v-model="orderData.price">
-                        </div>
-
-                        <div class="input-group mb-3">
-                            <button @click="" class="btn btn-secondary" type="button">Stop</button>
-                            <input type="number" class="form-control" v-model="orderData.stop">
-                        </div>
-
-                        <div class="input-group mb-3">
-                            <button @click="" class="btn btn-secondary" type="button">TP</button>
-                            <input type="number" class="form-control" v-model="orderData.profit">
-                        </div>
-
-                        <div class="input-group mb-3">
-                            <button @click="getRR()" class="btn btn-secondary" type="button">RR: </button>
-                            <input type="text" class="form-control" v-model="orderData.rr" disabled=true>
-                        </div>
-
-                        <div class="input-group mb-3">
-                            <button @click="" class="btn btn-secondary" type="button">Amount: </button>
-                            <input type="number" class="form-control" v-model="orderData.volume">
-                        </div>
-
-                        <div class="mb-3 mt-3">
-                            <button @click="getOrder('limit')" class="btn btn-info" type="button">Order Limit</button>
-                            <button @click="getOrder('market')" class="btn btn-danger" type="button">Order Market</button>
-                            <br>
-                            <br>
-                            <span class = 'text-dark'>
-
-                            <span>
-                        </div>
-
-                        <div class="input-group mb-3">
-                            <button class="btn btn-secondary" type="button">Auth Code</button>
-                            <input type="number" class="form-control" v-model="passcode">
-                        </div>
-
-                    </div>
-
-                    <div class="col m-2 rounded" style="background:lightgrey">
-
-                        <h3 class="mt-3 mb-2"> Settings </h3>
-
-                        <div class="input-group mb-3 mt-2">
-                            <button @click="setTime(5)" class="btn btn-secondary" type="button">&#128337 &#8593</button>
-                            <button @click="setTime(-5)" class="btn btn-secondary" type="button">&#8595</button>
-                            <input type="number" class="form-control" v-model="orderData.minutes">
-                        </div>
-
-                        <div class="input-group mb-3">
-                            <button @click="setLadder(1)" class="btn btn-secondary" type="button">Ladder &#8593</button>
-                            <button @click="setLadder(-1)" class="btn btn-secondary" type="button">&#8595</button>
-                            <input type="number" class="form-control" v-model="orderData.ladder">
-                        </div>
-
-                        <div class="input-group mb-3">
-                            <button @click="setSpread(0.5)" class="btn btn-secondary" type="button">Spread &#8593</button>
-                            <button @click="setSpread(-0.5)" class="btn btn-secondary" type="button">&#8595</button>
-                            <input type="number" class="form-control" v-model="orderData.spread">
-                        </div>
-
-                        <div class="input-group mb-3">
-                            <button @click="setRisk(0.1)" class="btn btn-secondary" type="button">Risk &#8593</button>
-                            <button @click="setRisk(-0.1)" class="btn btn-secondary" type="button">&#8595</button>
-                            <input type="number" class="form-control" v-model="orderData.risk">
-                        </div>
-
-                        <div class="input-group mb-3">
-                            <button @click="getData('leverage', 1)" class="btn btn-secondary" type="button">Lev</button>
-                            <button @click="getData('leverage', 0)" :stlye="getLevStyle()" class="btn btn-secondary" type="button">Set</button>
-                            <input type="number" class="form-control" v-model="orderData.leverage">
-                        </div>
-
-                        <div class="input-group mb-3">
-                            <button @click="setFraction(0.1)" class="btn btn-secondary" type="button">% &#8593</button>
-                            <button @click="setFraction(-0.1)" class="btn btn-secondary" type="button">&#8595</button>
-                            <input type="number" class="form-control" v-model="orderData.fraction">
-                        </div>
-
-                        <div class="input-group mb-3">
-                            <button @click="getFunds()" class="btn btn-secondary" type="button">FUNDS</button>
-                            [[ accountFunds ]]
-
-                        </div>
-
-                        <div style="display:none">
-
-                            <h3 class="mt-3 mb-2"> Manage [[manageData.response]]</h3>
-
-                            <div class="input-group mb-3">
-                                <button @click="manageOrder('size')" class="btn btn-secondary" type="button">Get Position</button>
-                                <button @click="manageOrder('cancel')" class="btn btn-secondary" type="button">Cancel Orders</button>
-
-                            </div>
-
-                            <div class="input-group mb-3">
-                                <button @click="manageOrder('breakeven')" class="btn btn-secondary" type="button">Break Even</button>
-                                <br>
-                                <input type="number" class="form-control" v-model="manageData.breakeven">
-                            </div>
-
-                            <div class="input-group mb-3">
-                                <button @click="manageOrder('limitexit')" class="btn btn-secondary" type="button">Limit Exit</button>
-                                <input type="number" class="form-control" v-model="manageData.limitexit">
-                                <button @click="manageOrder('fullexit')" class="btn btn-secondary" type="button">Full Exit</button>
-                            </div>
-
-                            <div class="input-group mb-3">
-                                <button @click="manageOrder('limitset')" class="btn btn-secondary" type="button">TP Set</button>
-                                <br>
-                                <input type="number" class="form-control" v-model="manageData.limitfraction">
-                                <input type="number" class="form-control" v-model="manageData.limitprice">
-                                <button @click="manageOrder('vwapget')" class="btn btn-secondary" type="button">VWAP</button>
-                                <button @click="manageOrder('vwapset')" class="btn btn-secondary" type="button">SET</button>
-                                <br>
-                                <input type="number" class="form-control" v-model="manageData.vwapfraction">
-                                <input type="number" class="form-control" v-model="manageData.vwapbuffer">
-                                <br> <h3> CHECK MONITOR IS WORKING 'try' </h3>
-                        </div>
-
-                    </div>
 
 
-                    </div>
+                <table class="table table-dark" class="table-responsive">
+                    <thead>
+                    <tr>
+                        <th scope="col">PetraTechs</th>
+                        <th scope="col">Trading Desk</th>
+                    </tr>
+                    </thead>
+                <tbody>
+                    <tr>
 
-                </div>
+                    </tr>
+                    <tr>
+                        <th class="" scope="row"><span @click="">Exchange </span> </th>
+                        <td class="text-info" scope="row"><span @click="">Kraken Futures </span> </td>
+                    </tr>
+                    <tr>
+                        <th class="" scope="row"><span @click="">Status </span> </th>
+                        <td class="text-danger" scope="row"><span @click="">Demo Mode </span> </td>
+                    </tr>
+                    <tr>
+                        <th class="" scope="row"><span @click="">Funds </span> </th>
+                        <td class="text-warning" scope="row"><span @click="getFunds()"> [[funds]]  </span> </td>
+                    </tr>
+                    <tr>
+                        <th class="" scope="row"><span @click="">Code</span> </th>
+                        <td class="text-warning" scope="row"><input class="text-warning bg-dark" type="int" v-model="passcode"></input> <span class="text-danger">[[codeNotice]]</span> </td>
+                    </tr>
+
+                </tbody>
+
+                </table>
+
+                <br>
+
+                <table class="table table-dark" class="table-responsive">
+                    <thead>
+                    <tr>
+                        <th scope="col" style="width:10%">Asset</th>
+                        <th scope="col" style="width:15%">Lev(x)</th>
+                        <th scope="col" style="width:15%">Stop(Tick)</th>
+                        <th scope="col" style="width:15%">Prop(%)</th>
+                        <th scope="col">Price</th>
+                        <th scope="col">Position</th>
+                        <th scope="col">Edit</th>
+                        <th scope="col">Show</th>
+                    </tr>
+                    </thead>
+                <tbody>
+                    <template v-for="(item, key) in assets" :key="key" >
+                        <tr class="">
+                            <th class="text-success text-xsmall" scope="row"><span>[[key.toUpperCase() ]]</span> </th>
+                            <td class="" ><span v-if="editAsset == key"> <input class="text-warning bg-dark" type="int"  v-model="parameters.lev"></input></span><span v-else>[[item.lev]]<span></td>
+                            <td class="" ><span v-if="editAsset == key"> <input class="text-warning bg-dark" type="int"  v-model="parameters.stop"></input></span><span v-else>[[item.stop]]<span></td>
+                            <td class="" ><span v-if="editAsset == key"> <input class="text-warning bg-dark" type="int"  v-model="parameters.prop"></input></span><span v-else>[[item.prop]]<span></td>
+                            <td class="" ><span>[[item.price]]</span></td>
+                            <td class="" ><span>[[item.position]]</span></td>
+                            <td class="">
+                                <button @click="edit(key)" type="button" class="btn btn btn-secondary">
+                                    <span v-if="editAsset == key"> Save </span>  <span v-else> Edit </span>
+                                </button>
+                            </td>
+                            <td class="">
+                                <button @click="toggleData(key)" type="button" class="btn btn btn-secondary">
+                                    <span > [[showData]] </span>
+                                </button>
+                            </td>
+                        </tr>
+                            <template v-if="showAsset == key && showData == 'Alerts'" v-for="(alert, k) in item.webhooks" :key="k" >
+                                <tr v-if="k < rows">
+                                    <td class="" colspan="2">[[alert.TIME]]</td>
+                                    <td class="" colspan="2">[[alert.SIDE]]</td>
+                                    <td class="" colspan="2">[[alert.TICKER]]</td>
+                                    <td class="" colspan="2">tf.[[alert.TF]]</td>
+                                </tr>
+                            </template>
+                            <template v-if="showAsset == key && showData == 'Errors'" v-for="(error, e) in item.errors" :key="e" >
+                                <tr v-if="e < rows">
+                                    <td class="" colspan="8">[[error]]</td>
+                                </tr>
+                            </template>
+                            <template v-if="showAsset == key && showData == 'Trades'" v-for="(trade, t) in item.trades" :key="t" >
+                                <tr v-if="t < rows">
+                                    <td class="" colspan="8">[[trade]]</td>
+                                </tr>
+                            </template>
+
+
+                    </template>
+
+
+                </tbody>
+
+                </table>
+
+
+
 
 
 
@@ -173,49 +123,6 @@
 
             <div :class="getMargin()" id="records">
 
-                <div class="text-white bg-black">
-                    <br>
-
-                    <h1 class="m-3 text-white" @click="goTo('')"> Trade Records </h1>
-                </div>
-
-                <div :class="getTradeDiv()">
-
-                    <div class="col m-2 rounded" style="background:lightgrey">
-
-
-
-                        <div class="mb-3 mt-3">
-                            <button @click="getAlerts()" class="btn btn-secondary btn-lg" type="button">Alerts </button>
-                            <br>
-                            <br>
-
-                            <template v-for="(item, key) in alerts" :key="key">
-                                <h4> [[item]] </h4>
-                            </template>
-                        </div>
-
-                    </div>
-
-                    <div class="col m-2 rounded" style="background:lightgrey">
-
-                        <div class="mb-3 mt-3">
-                            <button @click="getLufti()" class="btn btn-secondary btn-lg" type="button">Lufti Alerts</button>
-                            <br>
-                            <br>
-
-                            <template v-for="(item, key) in lufti" :key="key">
-                                <h4> [[item]] </h4>
-                            </template>
-                        </div>
-
-
-                    </div>
-
-
-                    </div>
-
-                </div>
 
 
 
@@ -257,77 +164,62 @@ let vue = new Vue({
     el: '#vue-app',
     delimiters: ['[[', ']]'],
     mounted: function() {
-        //this.tradingView()
+        this.getAssets()
     },
     data: {
+        rows: 3,
         alerts: [],
-        lufti: [],
         trades: [],
-        ticker: 'BTCUSD',
-        tickerFunds: '',
-        accountFunds: '',
-        orderData: {
-            side: '',
-            price: 0,
-            risk: 0.7,
-            spread: 0.5,
-            ladder: 2,
-            fraction: 0.5,
-            minutes: 10,
-            stop: 27000,
-            leverage: 2,
-            profit: 26000,
-            volume: 0.0001,
-            rr: '',
-            funds: 0,
-            order: '...'
-        },
-        manageData: {
-            breakeven: 10,
-            limitexit: 0.5,
-            limitfraction: 0.5,
-            limitprice: 100,
-            vwapfraction: 0.5,
-            vwapbuffer: 10,
-            response: '.....'
-        },
-        btc: 0,
-        report: report,
-        mobile: mobile,
-        showChart: false,
-        passcode: 3,
-        tvParams: {
-            "autosize" : false,
-            "width": '100%',
-            "height": 610,
-            "hide_side_toolbar": true,
-            "hide_top_toolbar": true,
-            "symbol": "BYBIT:BTCUSD.P",
-            "interval": "5",
-            "timezone": "Asia/Taipei",
-            "theme": "dark",
-            "style": "1",
-            "locale": "en",
-            "toolbar_bg": "#f1f3f6",
-            "enable_publishing": false,
-            "hide_legend": false,
-            "allow_symbol_change": true,
-            "container_id": "tradingview_2c4c6",
-            "studies": [
-                "STD;Bollinger_Bands",
-                "STD;VWAP",
-                "STD;Pivot%1Points%1Standard",
-            ],
+        funds: '==',
+        passcode: 123,
+        assets: {},
+        errors: {},
+        editAsset: '',
+        codeNotice: 'test',
+        totalProp: 0,
+        showData: '--',
+        showAsset: '',
+        parameters: {
+            lev : '',
+            stop : '',
+            prop : '',
+            prop : '',
         }
-
-
     },
     methods: {
-        //tradingView: function () {
-            //new TradingView.widget(
-                    //this.tvParams
-            //);
-        //},
+        toggleData: function (asset) {
+            this.showAsset = asset
+            if (this.showData == '--') {
+                this.showData = 'Alerts'
+            } else if (this.showData == 'Alerts') {
+                this.showData = 'Trades'
+            } else if (this.showData == 'Trades') {
+                this.showData = 'Errors'
+            } else {
+                this.showData = '--'
+            }
+        },
+        edit: function (asset) {
+            assetOBJ = this.assets[asset]
+            params = this.parameters
+            if (this.editAsset != '' && assetOBJ['lev'] != params['lev']){
+                if (params['position'] == 'short' || params['position'] == 'long') {
+                    alert('Cannot change leverage while position is open\nplease close position and make sure leverage on exchange and bot is the same')
+                }
+                if (params['lev'] < 2 || !Number.isInteger(!params['lev'])) {
+                    alert('Levarage should be >2')
+                }
+                return false
+            }
+
+
+            if (this.editAsset == asset) {
+                this.editAsset = ''
+            } else {
+                this.editAsset = asset
+            }
+
+        },
         goTo: function(link){
 
             var str = window.location.href.split('trade')[0]
@@ -336,19 +228,6 @@ let vue = new Vue({
 
             console.log('goTO', url);
             window.location = url
-
-        },
-        checkChange: function (c) {
-            this.checkBTN[c] = !this.checkBTN[c]
-            this.checkBTN = {...this.checkBTN}
-            console.log(this.checkBTN, c)
-        },
-        getCheckBTN: function (c) {
-            if (this.checkBTN[c]) {
-                return 'btn btn-success m-0'
-            } else {
-                return 'btn btn-danger m-0'
-            }
         },
         getMargin: function () {
             if (this.mobile) {
@@ -364,21 +243,6 @@ let vue = new Vue({
                 return "row align-items-start m-1 rounded"
             }
         },
-        getSide: function () {
-            let e = document.getElementById('sideSelect')
-            let v = e.options[e.selectedIndex].value
-            this.orderData.side = undefined
-            this.orderData.side = v
-            console.log(v)
-            return e.options[e.selectedIndex].value
-        },
-        getEntry: function () {
-            let e = document.getElementById('entrySelect')
-            let v = e.options[e.selectedIndex].value
-            console.log('entry', v)
-            this.loadRecord(v)
-            return e.options[e.selectedIndex].value
-        },
         getSideColor: function () {
             if (this.orderData.side == 'Buy') {
                 return 'background:mediumseagreen'
@@ -393,98 +257,9 @@ let vue = new Vue({
                 return 'background:red'
             }
         },
-        getRR: function () {
-
-            let OD = this.orderData
-            let profit_d
-            let profit_p
-            let rr
-
-            let loss_d = Math.abs(OD.price - OD.stop)
-            let loss_p = (Math.round((Math.abs(OD.price - OD.stop)/OD.price)*10000)/100)*this.orderData.leverage
-            if (OD.profit == 0) {
-                profit_d = '-'
-                profit_p = '-'
-                rr = '-'
-            } else {
-                profit_d = Math.abs(OD.price - OD.profit)
-                profit_p = Math.round((Math.abs(OD.price - OD.profit)/OD.price)*10000)/100
-                rr = Math.round((profit_d/loss_d)*1000)/1000
-            }
-
-
-            rrObject = { 'SL: ' : loss_d + '$ ',
-                      'S% ' : loss_p,
-                      'TP: ' : profit_d + '$',
-                      'L% ' : profit_p,
-                      'RR ' : '( ' + rr + ' )'
-                    }
-
-            OD.rr = rr
-
-            //console.log(OD.rr)
-        },
-        getTP: function () {
-
-            let _this = this.orderData
-
-            let ratio = 2
-
-            let loss_d = Math.abs(_this.price - _this.stop)
-            let price = this.orderData.price
-            let side = this.orderData.side
-
-            let tp
-
-            console.log('tp', side, loss_d, price, ratio, price + (loss_d*ratio) )
-
-            if (side == 'Buy') {
-                tp = price + (loss_d*ratio)
-            } else {
-                tp = price - (loss_d*ratio)
-            }
-
-            this.orderData.profit = tp
-
-        },
-        clearPrice: function () {
-            this.orderData.order = ''
-            this.orderData.price = 0
-        },
-        setLadder: function (n) {
-            newNumber = this.orderData.ladder + n
-            this.orderData.ladder = Math.round(newNumber * 10) / 10
-        },
-        setRisk: function (n) {
-            newNumber = this.orderData.risk + n
-            this.orderData.risk = Math.round(newNumber * 10) / 10
-        },
-        setSpread: function (n) {
-            newNumber = this.orderData.spread + n
-            this.orderData.spread = Math.round(newNumber * 10) / 10
-        },
-        setTime: function (n) {
-            this.orderData.minutes += n
-        },
-        setLimitFraction: function (n) {
-            newNumber = this.orderData.fraction + n
-            this.orderData.fraction = Math.round(newNumber * 10) / 10
-
-        },
-        setFraction: function (n) {
-            newNumber = this.orderData.fraction + n
-            this.orderData.fraction = Math.round(newNumber * 10) / 10
-        },
         getOrder: function (mode, x) {
             console.log('getData', mode, x)
 
-            //mark r to reset risk later
-            //const r = this.orderData.risk
-
-            //if (x == 0) {
-            //    this.orderData.risk = 0
-            //}
-            // console.log('risk', this.orderData.risk)
 
             $.ajax({
                 data : {
@@ -514,17 +289,12 @@ let vue = new Vue({
                 this.orderData.side = 'Sell'
             }
         },
-        getTicker: function () {
+        getTicker: function (ticker) {
             console.log('getTicker')
-
-            if (this.ticker.length < 4) {
-                alert('Pair input is too short')
-                return false
-            }
 
             $.ajax({
                 data : {
-                    ticker: this.ticker
+                    ticker: ticker
                 },
                 type : 'POST',
                 url : '/getTicker'
@@ -532,15 +302,6 @@ let vue = new Vue({
             })
             .done(function(data) {
                 console.log(data, data.result)
-                if (data.error.length > 0) {
-                    alert('Pair cannot be found')
-                    console.log('GET TICKER ERROR', data.error)
-                } else {
-                    console.log(Object.keys(data.result))
-                    oKeys = Object.keys(data.result)
-                    vue.orderData.price = data.result[oKeys[0]]['c'][0]
-                }
-
             })
             .fail(function(){
                   alert('error has occurred getTicker');
@@ -549,13 +310,8 @@ let vue = new Vue({
         getFunds: function () {
             console.log('getFunds')
 
-            if (this.tickerFunds.length < 4) {
-                this.tickerFunds = ''
-            }
-
             $.ajax({
                 data : {
-                    tickerFunds: this.tickerFunds
                 },
                 type : 'POST',
                 url : '/getFunds'
@@ -563,172 +319,55 @@ let vue = new Vue({
             })
             .done(function(data) {
                 console.log(data, data.result)
-                if (data.error.length > 0) {
-                    console.log('GET FUNDS ERROR', data.error)
-                } else {
-                    vue.accountFunds = data.result
-                }
-
+                vue.funds = data.result
             })
             .fail(function(){
                   alert('error has occurred getFunds');
             });
         },
-        getAlerts: function () {
-            console.log('getAlerts')
+        getAssets: function () {
+            console.log('getAssets')
 
 
             $.ajax({
                 data : {
-                },
-                type : 'POST',
-                url : '/getAlerts'
-
-            })
-            .done(function(data) {
-                console.log(data)
-                vue.alerts = JSON.parse(data)
-            })
-            .fail(function(){
-                  alert('error has occurred getAlerts');
-            });
-        },
-        getLutfi: function () {
-            console.log('getLutfi')
-
-
-            $.ajax({
-                data : {
-                },
-                type : 'POST',
-                url : '/getLutfi'
-
-            })
-            .done(function(data) {
-                console.log(data)
-                vue.lufti = JSON.parse(data)
-            })
-            .fail(function(){
-                  alert('error has occurred getLutfi');
-            });
-        },
-        getTrades: function () {
-            console.log('getAlerts')
-
-            $.ajax({
-                data : {
-                },
-                type : 'POST',
-                url : '/getTrades'
-
-            })
-            .done(function(data) {
-                console.log(data)
-                vue.trades = JSON.parse(data)
-            })
-            .fail(function(){
-                  alert('error has occurred getTrades');
-            });
-        },
-        manageOrder: function (mode) {
-            console.log('manageOrder', mode)
-
-
-            $.ajax({
-                data : {
-                    mode: mode,
-                    breakeven: this.manageData.breakeven,
-                    limitexit: this.manageData.limitexit,
-                    limitfraction: this.manageData.limitfraction,
-                    limitprice: this.manageData.limitprice,
-                    vwapfraction: this.manageData.vwapfraction,
-                    vwapbuffer: this.manageData.vwapbuffer
-                },
-                type : 'POST',
-                url : '/manageOrder'
-
-            })
-            .done(function(data) {
-                console.log(data.result, data.mode)
-                vue.manageData.response = data.result
-
-
-            })
-            .fail(function(){
-                  alert('error has occurred gData');
-            });
-        },
-        getOrder2: function (mode) {
-            if (this.orderData.stop == 0) {
-                alert('no stop set')
-                return false
-            } else if (Math.abs(this.orderData.stop-this.orderData.price) < 20) {
-                this.orderData.stop = this.orderData.price + 21
-                if (this.orderData.side == 'Buy') {
-                    this.orderData.stop =  this.orderData.price - 21
-                }
-                alert('stop is too close')
-                return false
-            }
-
-            if (mode == 'market') {
-                this.orderData.price = 0
-            }
-            if (mode == 'instant') {
-                this.orderData.price = 0
-                this.orderData.ladder = 1
-            }
-
-            console.log('getOrder')
-
-            $.ajax({
-                data : {
-                    mode: true,
-                    side: this.orderData.side,
-                    price: this.orderData.price,
-                    stop: this.orderData.stop,
-                    fraction: this.orderData.fraction,
-                    leverage: this.orderData.leverage,
-                    profit: this.orderData.profit,
-                    spread: this.orderData.spread,
-                    ladder: this.orderData.ladder,
                     pw: this.passcode
                 },
                 type : 'POST',
-                url : '/getOrder'
+                url : '/getAssets'
 
             })
             .done(function(data) {
-                console.log(data.result)
-                vue.orderData.order = JSON.parse(data.result)
+                console.log(data)
+                parseData = JSON.parse(data)
+                console.log(parseData['assets'])
+                vue.assets = parseData
             })
             .fail(function(){
-                  alert('error has occurred getOrder');
+                  alert('error has occurred getAssets');
             });
         }
     },
     computed: {
-        getTakeProfit() {
-            return this.orderData.profit
-        },
-        getStopLoss() {
-            return this.orderData.stop
-        }
+
     },
     watch: {
-        btc: function () {
-            console.log('watch', this.btc)
-
-            let funds = this.orderData.funds
-
-            let frac = (this.btc/funds)
-            if (frac == 1) {
-                frac = 0.9
+        editAsset: function () {
+            if (this.editAsset == '') {
+                this.parameters = {
+                    lev : '',
+                    stop : '',
+                    prop : '',
+                    position : '',
+                }
             }
-            this.orderData.fraction = frac
-        },
-        getTakeProfit: function () {
-            this.getRR()
+
+            console.log('watch', this.btc)
+            asset = this.assets[this.editAsset]
+            this.parameters['lev'] = asset['lev']
+            this.parameters['stop'] = asset['stop']
+            this.parameters['prop'] = asset['prop']
+            this.parameters['position'] = asset['position']
         },
         getStopLoss: function () {
             this.getRR()
