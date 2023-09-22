@@ -2,7 +2,7 @@ from flask import Flask, request, render_template, jsonify, abort
 import json
 import time
 import datetime
-from settings import SECRET_KEY, r, CODE, auth_required
+from settings import SECRET_KEY, r, CODE, auth_required, EXCHANGE
 # from exchangeAPI import apiFunds, apiTicker, apiOrder
 from getAPI import getInstruments, tradeStatus, closeOpen, openPosition, getFunds, getTicker
 
@@ -25,9 +25,6 @@ def addAlert(instrument, msg):
 
     now = datetime.now()
     date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
-
-    if 'misc' not in errors:
-        errors['misc'] = []
 
     if instrument not in errors:
         errors['misc'].insert(0, msg + '//' + date_time)
@@ -126,7 +123,9 @@ def tradingview_webhook():
 
 
     assets[instrument]['webhooks'].insert(0, data)
+    print(data, assets[instrument]['webhooks'][0])
     r.set('assets', json.dumps(assets))
+
     STOP = assets[instrument]['stop']
     PROP = assets[instrument]['prop']
     LEV = assets[instrument]['lev']
@@ -187,23 +186,36 @@ def tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID):
         return False
 
 
-@app.route('/getFunds', methods=['POST'])
-def getFunds():
+@app.route('/getData', methods=['POST'])
+def getData():
     pw = request.form ['pw']
     if int(pw) != int(CODE):
-        return {'error' : 'authentication'}
+        return {'error' : 'authentication code input required'}
+
+    errors = json.loads(r.get('errors'))
+
+    if 'misc' not in errors:
+        errors['misc'] = []
+        r.set('errors', json.dumps(errors))
+
+    dataOBJ = {
+        'funds' : getFunds(),
+        'misc' : errors['misc'],
+        'exchange' : EXCHANGE
+    }
 
 
     # if pw != PASSWORD:
     #     return abort
-    return json.dumps(getFunds())
+    return json.dumps(dataOBJ)
 
 
 @app.route('/getAssets', methods=['POST'])
 def getAssets():
     pw = request.form ['pw']
     if int(pw) != int(CODE):
-        return {'error' : 'authentication'}
+        return {'error' : 'authentication code'}
+
 
     assets = json.loads(r.get('assets'))
     errors = json.loads(r.get('errors'))
@@ -219,14 +231,12 @@ def getAssets():
     return json.dumps(assets)
 
 
-
 @app.route('/setAsset', methods=['POST'])
 def setAsset():
     pw = request.form ['pw']
     if int(pw) != int(CODE):
         return {'error' : 'authentication error'}
 
-    # pw = request.form ['pw']
     asset = request.form['asset']
     stop = request.form['stop']
     lev = request.form['lev']
@@ -240,6 +250,27 @@ def setAsset():
     r.set('assets', json.dumps(assets))
 
     return {'success' : 'assets updated'}
+
+@app.route('/deleteAsset', methods=['POST'])
+def deleteAsset():
+    pw = request.form ['pw']
+    if int(pw) != int(CODE):
+        return {'error' : 'authentication error'}
+
+    asset = request.form['asset']
+
+
+
+    assets = json.loads(r.get('assets'))
+
+    removedAsset = assets.pop(asset, asset +' not found')
+
+    msg = "Removed Asset: " + asset
+    print(msg)
+
+    r.set('assets', json.dumps(assets))
+
+    return {'success' : msg}
 
 
 

@@ -42,7 +42,8 @@ def getFunds():
     marginEquity = res['accounts']['flex']['marginEquity']
     collateralBasic = res['accounts']['flex']['marginEquity'] - res['accounts']['flex']['totalUnrealized']
     availableMargin = res['accounts']['flex']['availableMargin']
-    return [marginEquity, collateralBasic, availableMargin]
+    return [round(marginEquity), round(collateralBasic), round(availableMargin)]
+
 
 def getInstruments(asset):
     result = cfPublic.get_instruments()
@@ -97,8 +98,11 @@ def tradeStatus(instrument):
     for p in res['openPositions']:
         if p['symbol'] == instrument:
             print('tradeStatus found:\n ' + instrument + ' ' + p['side'] + '\n' + str(p))
+            maxLev = 0
+            if 'maxFixedLeverage' in p:
+                maxLev = p['maxFixedLeverage']
 
-            return [p['side'], p['maxFixedLeverage']]
+            return [p['side'], maxLev]
 
     print('tradeStatus: No Postion Found')
     ## no tradeStatus found

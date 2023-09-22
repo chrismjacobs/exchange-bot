@@ -22,8 +22,7 @@
                 <table class="table table-dark" class="table-responsive">
                     <thead>
                     <tr>
-                        <th scope="col">PetraTechs</th>
-                        <th scope="col">Trading Desk</th>
+                        <th scope="col"><h3>Bot Dashboard</h3></th>
                     </tr>
                     </thead>
                 <tbody>
@@ -32,19 +31,23 @@
                     </tr>
                     <tr>
                         <th class="" scope="row"><span @click="">Exchange </span> </th>
-                        <td class="text-info" scope="row"><span @click="">Kraken Futures </span> </td>
-                    </tr>
-                    <tr>
+                        <td class="" style="color:#C97CFE " scope="row"><span @click="">Kraken Futures </span> </td>
                         <th class="" scope="row"><span @click="">Status </span> </th>
-                        <td class="text-danger" scope="row"><span @click="">Demo Mode </span> </td>
+                        <td class="text-danger" scope="row"><span @click="">[[exchange]] Mode </span> </td>
                     </tr>
                     <tr>
                         <th class="" scope="row"><span @click="">Funds </span> </th>
-                        <td class="text-warning" scope="row"><span @click="getFunds()"> [[funds]]  </span> </td>
+                        <td class="text-warning" scope="row"><span> [[funds]]  </span> </td>
+                        <td class="text-warning" scope="row"><span @click="">Open Positions  [[calcOpen]]%</span> </td>
+                        <td class="text-warning" scope="row"><span > Tot Allocations  [[calcAllo]]%</span> </td>
                     </tr>
+
                     <tr>
-                        <th class="" scope="row"><span @click="">Code</span> </th>
-                        <td class="text-warning" scope="row"><input class="text-light bg-dark" type="int" v-model="passcode"></input> <span class="text-danger">[[codeNotice]]</span> </td>
+                        <th class="" scope="row"><span @click="">Auth Code</span>
+                        <input type="number" class="bg-dark text-white" v-model="passcode"> </input><button @click="getData()" type="button" class="btn btn-sm btn-secondary"> [[API]] </button>
+                        </th>
+
+                        <td class="" scope="row"><span @click="">Misc Errors [[misc.length]]</span> </td>
                     </tr>
 
                 </tbody>
@@ -56,42 +59,57 @@
                 <table class="table table-dark" class="table-responsive">
                     <thead>
                     <tr>
-                        <th class="bg-dark" scope="col" style="width:10%">Asset</th>
+                        <th scope="col" style="width:10%">Asset</th>
                         <th scope="col" style="width:15%">Lev(x)</th>
-                        <th scope="col" style="width:15%">Stop(Tick)</th>
+                        <th scope="col" style="width:15%">Stop(Ticks)</th>
                         <th scope="col" style="width:15%">Prop(%)</th>
                         <th scope="col">Price</th>
                         <th scope="col">Position</th>
+                        <th scope="col">Webhooks</th>
+                        <th scope="col">Trades</th>
+                        <th scope="col">Errors</th>
                         <th scope="col">Edit</th>
                         <th scope="col">Show</th>
+                        <th scope="col"> </th>
                     </tr>
                     </thead>
                 <tbody>
                     <template v-for="(item, key) in assets" :key="key" >
                         <tr class="">
-                            <th :class="getSideColor(key)" scope="row"><span>[[key.toUpperCase() ]]</span> </th>
-                            <td class="" ><span v-if="editAsset == key"> <input :class="getSideColor(key)" type="number"  v-model="parameters.lev"></input></span><span v-else>[[item.lev]]<span></td>
-                            <td class="" ><span v-if="editAsset == key"> <input :class="getSideColor(key)" type="number"  v-model="parameters.stop"></input></span><span v-else>[[item.stop]]<span></td>
-                            <td class="" ><span v-if="editAsset == key"> <input :class="getSideColor(key)" type="number"  v-model="parameters.prop"></input></span><span v-else>[[item.prop]]<span></td>
+                            <th class= "text-xsmall" :style="getAssetColor(key)" scope="row"><span>[[key.toUpperCase() ]]</span> </th>
+                            <td class="" ><span v-if="editAsset == key"> <input class= "text-xsmall bg-dark" :style="getAssetColor(key)" type="number"  v-model="parameters.lev"></input></span><span v-else>[[item.lev]]<span></td>
+                            <td class="" ><span v-if="editAsset == key"> <input class= "text-xsmall bg-dark" :style="getAssetColor(key)" type="number"  v-model="parameters.stop"></input></span><span v-else>[[item.stop]]<span></td>
+                            <td class="" ><span v-if="editAsset == key"> <input class= "text-xsmall bg-dark" :style="getAssetColor(key)" type="number"  v-model="parameters.prop"></input></span><span v-else>[[item.prop]]<span></td>
                             <td class="" ><span>[[item.price]]</span></td>
                             <td class="" ><span>[[item.position]] <span v-if="item.position">([[item.lastlev]]x  [[item.lastprop]]%)</span></span></td>
+                            <td class="" >[[getSum(key, 'webhooks')]]</td>
+                            <td class="" >[[getSum(key, 'trades')]]</td>
+                            <td class="" >[[getSum(key, 'errors')]]</td>
                             <td class="">
-                                <button @click="editSave(key)" type="button" class="btn btn btn-secondary">
+                                <button v-if="editAsset == key || editAsset == '' " @click="editSave(key)" type="button" class="btn btn btn-secondary">
                                     <span v-if="editAsset == key"> Save </span>  <span v-else> Edit </span>
                                 </button>
                             </td>
                             <td class="">
-                                <button @click="toggleData(key)" type="button" class="btn btn btn-secondary">
-                                    <span > [[showData]] </span>
+                                <button v-if="editAsset == ''" @click="toggleData(key)" type="button" class="btn btn btn-secondary">
+                                    <span v-if="showAsset == key"> [[showData]] </span><span v-else> -- </span>
+                                </button>
+                            </td>
+                            <td v-if="editAsset == key">
+                                <button v-if="assetDelete == ''" @click="checkDelete(key, item.position)" type="button" class="btn btn btn-secondary">
+                                    <span> X </span>
+                                </button>
+                                <button v-if="assetDelete == key" @click="authDelete(key)" type="button" class="btn btn btn-danger">
+                                    <span> X </span>
                                 </button>
                             </td>
                         </tr>
-                            <template v-if="showAsset == key && showData == 'Alerts'" v-for="(alert, k) in item.webhooks" :key="k" >
+                            <template v-if="showAsset == key && showData == 'Webhooks'" v-for="(webhook, k) in item.webhooks" :key="k" >
                                 <tr v-if="k < rows">
-                                    <td class="" colspan="2">[[alert.TIME]]</td>
-                                    <td class="" colspan="2">[[alert.SIDE]]</td>
-                                    <td class="" colspan="2">[[alert.TICKER]]</td>
-                                    <td class="" colspan="2">tf.[[alert.TF]]</td>
+                                    <td class="" colspan="2">[[webhook.TIME]]</td>
+                                    <td :class="getSideColor(webhook.SIDE)" colspan="2">[[webhook.SIDE]]</td>
+                                    <td class="" colspan="2">[[webhook.TICKER]]</td>
+                                    <td class="" colspan="2">tf.[[webhook.TF]]</td>
                                 </tr>
                             </template>
                             <template v-if="showAsset == key && showData == 'Errors'" v-for="(error, e) in item.errors" :key="e" >
@@ -101,7 +119,10 @@
                             </template>
                             <template v-if="showAsset == key && showData == 'Trades'" v-for="(trade, t) in item.trades" :key="t" >
                                 <tr v-if="t < rows">
-                                    <td class="" colspan="8">[[trade]]</td>
+                                    <td class="" colspan="2">[[trade.TIME]]</td>
+                                    <td :class="getSideColor(trade.SIDE)" colspan="2">[[trade.SIDE]]</td>
+                                    <td class="" colspan="2">[[trade.status]]</td>
+                                    <td class="" colspan="3">[[trade.ORDERID]]</td>
                                 </tr>
                             </template>
 
@@ -112,6 +133,34 @@
                 </tbody>
 
                 </table>
+                <br>
+
+
+
+                <table class="table table-dark" class="table-responsive">
+                    <thead>
+                    <tr>
+                        <th scope="col" style="width:10%">
+                            <button @click="showNotes = !showNotes" type="button" class="btn btn btn-secondary">
+                                <span> Notes </span>
+                            </button>
+                        </th>
+                        <th scope="col"> </th>
+                    </tr>
+                    </thead>
+                <tbody v-if="showNotes">
+                    <template v-for="(item, key) in usernotes" :key="key" >
+                        <tr class="">
+                            <th class= "text-xsmall" scope="row"><span v-if="key.length > 2">[[key]]</span> </th>
+                            <td class=""> [[item]]</td>
+                        </tr>
+                    </template>
+
+                </tbody>
+
+                </table>
+
+
 
 
 
@@ -164,23 +213,28 @@ let vue = new Vue({
     el: '#vue-app',
     delimiters: ['[[', ']]'],
     mounted: function() {
-        this.getAssets()
+        this.getData()
     },
     data: {
-        rows: 3,
+        API : 'API',
+        exchange: '',
+        rows: 6,
         alerts: [],
         trades: [],
-        funds: '==',
+        funds: ['=='],
+        misc: [],
+        open: 0,
         liquidation: '',
         stop: '',
-        passcode: 123,
+        passcode: 12,
         assets: {},
         errors: {},
         editAsset: '',
-        codeNotice: 'test',
         totalProp: 0,
         showData: '--',
         showAsset: '',
+        showNotes: true,
+        assetDelete: '',
         parameters: {
             lev : '',
             stop : '',
@@ -195,27 +249,34 @@ let vue = new Vue({
             p2 : 'When changing proportion alloacation of an asset, the reblance will occur when a new position is opened',
             p3 : 'Changing proportions on assets may be blocked if the new proportions conflict with current open position allocations',
             p4 : '!! If you remove funds from your collateral on the exchange while positions are open, you may get an insufficientFunds error if another asset tries to open a new position',
-            TRADINGVIEW : 'Alerts set once per bar close on hourly timeframe, alert message must use the following json format for buy or sell:',
-            t1 : '{"TICKER":"{{ticker}}", "SIDE":"buy", "TVCODE":"...", "TIME":"{{time}}", "TF":"{{interval}}"}',
-            t2 : '{"TICKER":"{{ticker}}", "SIDE":"sell", "TVCODE":"...", "TIME":"{{time}}", "TF":"{{interval}}"}',
-            t3 : 'TVCODE must match app environment variable',
+            TRADINGVIEW : 'Webhook Alerts set once per bar close on hourly timeframe, alert message must use the following json format for buy or sell:',
+            t1 : '{"TICKER":"{{'{{ticker}}'}}", "SIDE":"buy", "TVCODE":"111", "TIME":"{{'{{timenow}}'}}", "TF":"{{'{{interval}}'}}"}',
+            t2 : '{"TICKER":"{{'{{ticker}}'}}", "SIDE":"sell", "TVCODE":"111", "TIME":"{{'{{timenow}}'}}", "TF":"{{'{{interval}}'}}"}',
+            t3 : 'TVCODE must match app environment variable, it must always be a number',
+            t4 : 'Use the webhook notifcation with this link:',
+            t5 : 'https://exchange-bot-sr3e.onrender.com/webhook',
+            t6 : 'In final product use live website link address  + /webhook',
             STOP : 'Stop is measured by ticks on the asset',
             s1 : 'Stop calculation cannot be too close or more than estimated liquidation price',
-            s2 : 'Stop must be greater than 0.5% of price',
-            KRAKEN : 'You can still interact with Kraken exchange manually',
-            k1 : 'You can move the set stoploss or open a new position',
-            k2 : 'If you add stop loss manually that will not be found and removed by the bot so must remove it manually',
-            k3 : 'If you add a position manually you must calculate the proportion in accordance with what is set on the bot for that asset',
-            k4 : 'If you add a position on an asset that is not assigned to the bot, account for the proportion of funds that are not available to the bot when setting bot assigned proportions',
+            KRAKEN : 'User can still interact with Kraken exchange manually',
+            k1 : 'User can move the set stoploss or open a new position',
+            k2 : 'If add stop loss manually that will not be found and removed by the bot so must remove it manually',
+            k3 : 'If add a position manually you must calculate the proportion in accordance with what is set on the bot for that asset',
+            k4 : 'If add a position on an asset that is not assigned to the bot (not recommended), account for the proportion of funds that will not available to the bot',
 
         }
     },
     methods: {
+        getSum: function (asset, mode) {
+            let a = this.assets[asset]
+            return a[mode].length
+
+        },
         toggleData: function (asset) {
             this.showAsset = asset
             if (this.showData == '--') {
-                this.showData = 'Alerts'
-            } else if (this.showData == 'Alerts') {
+                this.showData = 'Webhooks'
+            } else if (this.showData == 'Webhooks') {
                 this.showData = 'Trades'
             } else if (this.showData == 'Trades') {
                 this.showData = 'Errors'
@@ -223,10 +284,28 @@ let vue = new Vue({
                 this.showData = '--'
             }
         },
-        editSave: function (asset) {
-            let assetOBJ = this.assets[asset]
-            let params = this.parameters
-            if (this.editAsset != '' && assetOBJ['lev'] != params['lev']){
+        calcUnopened: function (asset) {
+            let unopen = 0
+            for (let a in this.assets) {
+                if (this.assets[a]['position'] == null && a != asset) {
+                    unopen += this.assets[a]['prop']
+                }
+            }
+            return unopen
+
+        },
+        calcOpened: function (asset) {
+            let open = 0
+            for (let a in this.assets) {
+                if (this.assets[a]['position'] && a != asset) {
+                    open += this.assets[a]['lastprop']
+                }
+            }
+            return open
+
+        },
+        checkLev: function (params, sameLev, assetOBJ) {
+            if (this.editAsset != '' && !sameLev){
                 console.log(params['lev'])
                 if (params['position'] == 'short' || params['position'] == 'long') {
                     alert('Cannot change leverage while position is open\nplease close position and make sure leverage on exchange and bot is the same')
@@ -236,9 +315,12 @@ let vue = new Vue({
                     alert('Levarage should be > 1')
                     return false
                 }
-
+                if (this.checkStop(params, false, assetOBJ)) {}
             }
-            if (this.editAsset != '' && assetOBJ['stop'] != params['stop']){
+            return true
+        },
+        checkStop: function (params, sameStop, assetOBJ) {
+            if (this.editAsset != '' && !sameStop){
                 let price = assetOBJ['price']
                 let lev = params['lev']
                 let liquidation = price - (price / lev + 0.2 )
@@ -248,28 +330,53 @@ let vue = new Vue({
                 this.stop = stopCalc
                 console.log(liquidation)
                 if (stopCalc < liquidation) {
-                    alert('Stop is less than liquidation price')
+                    alert('Stop is less than liquidation price: approx. ' + liquidation.toString())
                     return false
                 } else if (params['stop'] <= 0) {
                     alert('Stop cannot be zero')
                     return false
                 }
-
             }
-            if (this.editAsset != '' && assetOBJ['prop'] != params['prop']){
-
+            return true
+        },
+        checkProp: function (params, sameProp, assetOBJ) {
+            if (this.editAsset != '' && !sameProp){
                 totProp = 0
-                /// calculate prop
-                if (totProp > 100) {
+                let aPosition = assetOBJ['position']
+
+                /// assest has no position open
+                let available1 = 100 - (this.calcOpen + this.calcUnopened(asset))
+                let available2 = 100 - (this.calcUnopened(asset) + this.calcOpened(asset))
+                console.log(aPosition, available1, params['prop'], this.calcOpen, this.calcUnopened(asset))
+                if (!aPosition &&  available1 < params['prop']) {
                     alert('Proportion balance to large; please close open positions to allow bot to rebalance correctly')
                     return false
                 }
-
+                if (aPosition &&  available2 < params['prop']) {
+                    alert('Proportion balance to large; please close open positions to allow bot to rebalance correctly')
+                    return false
+                }
             }
+            return true
+        },
+        editSave: function (asset) {
+            let assetOBJ = this.assets[asset]
+            let params = this.parameters
 
+            let sameProp = assetOBJ['prop'] == params['prop']
+            let sameLev = assetOBJ['lev'] == params['lev']
+            let sameStop = assetOBJ['stop'] == params['stop']
 
-            if (this.editAsset == asset && this.params) {
-                let set = this.setAsset(asset)
+            this.checkLev(params, sameLev, assetOBJ)
+            this.checkStop(params, sameStop, assetOBJ)
+            this.checkProp(params, sameProp, assetOBJ)
+
+            let allSame = sameProp && sameLev && sameStop
+
+            if (this.editAsset != '' && !allSame) {
+                this.setAsset(asset)
+            } else if (this.editAsset == asset) {
+
                 this.editAsset = ''
                 this.stop = ''
                 this.liquidation = ''
@@ -301,95 +408,63 @@ let vue = new Vue({
                 return "row align-items-start m-1 rounded"
             }
         },
-        getSideColor: function (asset) {
+        getAssetColor: function (asset) {
             let styles = {
-                1 : "text-success text-xsmall bg-dark",
-                2 : "text-info text-xsmall bg-dark",
-                3 : "text-warning text-xsmall bg-dark",
-                4 : "text-white text-xsmall bg-dark",
-                5 : "text-success text-xsmall bg-dark",
-                6 : "text-info text-xsmall bg-dark",
-                7 : "text-warning text-xsmall bg-dark",
-                8 : "text-white text-xsmall bg-dark"
+                1 : {color:'cyan'},
+                2 : {color:'lime'},
+                3 : {color:'#FFFF00'},
+                4 : {color:'#FF00FF'},
+                5 : {color:'cyan'},
+                6 : {color:'lime'},
+                7 : {color:'#FFFF00'},
+                8 : {color:'#FF00FF'}
             }
             let count = 1
             for (let a in this.assets) {
-                console.log(a)
                 if (a == asset) {
                     return styles[count]
                 }
                 count += 1
             }
-            return styles[8]
+            return {color:'white'}
+        },
+        getSideColor: function (side) {
+            let sideClass = {
+                buy : "text-success text-uppercase font-weight-bold",
+                sell : "text-danger text-uppercase font-weight-bold"
+            }
+            return sideClass[side]
         },
         getLevStyle: function () {
             if (this.orderData.leverage < 1) {
                 return 'background:red'
             }
         },
-        getOrder: function (mode, x) {
-            console.log('getData', mode, x)
-
-
-            $.ajax({
-                data : {
-                    mode: mode,
-                    price: vue.orderData['price'],
-                    stop: vue.orderData['stop'],
-                    profit: vue.orderData['profit'],
-                    side: vue.orderData['side'],
-                    volume: vue.orderData['volume'],
-                },
-                type : 'POST',
-                url : '/getOrder'
-
-            })
-            .done(function(data) {
-                console.log(data.result, data.mode)
-
-            })
-            .fail(function(){
-                  alert('error has occurred gData');
-            });
-        },
-        setOrder: function (side) {
-            if (side == 'Buy') {
-                this.orderData.side = 'Buy'
-            } else if (side == 'Sell') {
-                this.orderData.side = 'Sell'
-            }
-        },
-        getTicker: function (ticker) {
-            console.log('getTicker')
+        getData: function () {
+            this.API = 'Accessing API...'
+            console.log('getData')
 
             $.ajax({
                 data : {
-                    ticker: ticker
+                    pw: this.passcode
                 },
                 type : 'POST',
-                url : '/getTicker'
+                url : '/getData'
 
             })
             .done(function(data) {
-                console.log(data, data.result)
-            })
-            .fail(function(){
-                  alert('error has occurred getTicker');
-            });
-        },
-        getFunds: function () {
-            console.log('getFunds')
-
-            $.ajax({
-                data : {
-                },
-                type : 'POST',
-                url : '/getFunds'
-
-            })
-            .done(function(data) {
-                console.log(data, data.result)
-                vue.funds = data.result
+                console.log(data)
+                if (data.error) {
+                    vue.API = 'API'
+                    alert(data.error)
+                    return false
+                } else {
+                    vue.getAssets()
+                    parseData = JSON.parse(data)
+                    vue.funds = parseData.funds
+                    vue.misc = parseData.misc
+                    vue.exchange = parseData.exchange
+                }
             })
             .fail(function(){
                   alert('error has occurred getFunds');
@@ -409,9 +484,14 @@ let vue = new Vue({
             })
             .done(function(data) {
                 console.log(data)
+                if (data.error) {
+                    vue.API = 'API'
+                    return false
+                }
                 parseData = JSON.parse(data)
                 console.log(parseData['assets'])
                 vue.assets = parseData
+                vue.API = 'API'
             })
             .fail(function(){
                   alert('error has occurred getAssets');
@@ -440,12 +520,54 @@ let vue = new Vue({
                 location.reload()
             })
             .fail(function(){
-                  alert('error has occurred getAssets');
+                  alert('error has occurred setAsset');
+            });
+        },
+        checkDelete: function (asset, position) {
+            if (position) {
+                alert('Please close postion before deleting asset')
+                return false
+            }
+
+            this.assetDelete = asset
+            alert('Are you sure you want to remove ' + asset + ' from the bot list?')
+        },
+        authDelete: function (asset) {
+            console.log('authDelete', this.assetDelete)
+
+            $.ajax({
+                data : {
+                    pw: this.passcode,
+                    asset: asset
+                },
+                type : 'POST',
+                url : '/deleteAsset'
+
+            })
+            .done(function(data) {
+                console.log(data)
+                location.reload()
+            })
+            .fail(function(){
+                  alert('error has occurred deleteAsset');
             });
         }
     },
     computed: {
-
+        calcOpen() {
+            let open = 0
+            for (let a in this.assets) {
+                open += this.assets[a]['lastprop']
+            }
+            return open
+        },
+        calcAllo() {
+            let allo = 0
+            for (let a in this.assets) {
+                allo += this.assets[a]['prop']
+            }
+            return allo
+        }
     },
     watch: {
         editAsset: function () {
