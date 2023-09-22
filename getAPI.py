@@ -225,7 +225,7 @@ def closeOpen(instrument, STOP, PROP, LEV, STOPCANCEL):
             STOPID = stopRes['sendStatus']['order_id']
             now = datetime.now()
             date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
-            return {'TIME': date_time, 'status': 'CLOSE/OPEN ' + SIDE.upper(), 'instrument': instrument, 'STOPID': STOPID, 'OPENID': OPENID }
+            return {'TIME': date_time, 'status': 'CLOSE/OPEN ', 'side': SIDE, 'instrument': instrument, 'STOPID': STOPID, 'OPENID': OPENID }
 
 
 def openPosition(instrument, STOP, PROP, LEV, SIDE):
@@ -279,7 +279,7 @@ def openPosition(instrument, STOP, PROP, LEV, SIDE):
 
     now = datetime.now()
     date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
-    return {'TIME': date_time, 'status': 'START NEW POSITION', 'instrument': instrument, 'STOPID': STOPID, 'OPENID': OPENID }
+    return {'TIME': date_time, 'status': 'START NEW POSITION', 'side': SIDE, 'instrument': instrument, 'STOPID': STOPID, 'OPENID': OPENID }
 
 
 instrument = 'pf_xbtusd'
