@@ -65,8 +65,7 @@ def tradingview_webhook():
         addAlert('tradingview', str(e))
         return 'ERROR'
     print('TV DATA', data)
-    print('TV DATA', type(data))
-    print('TV DATA', data.keys())
+
     try:
         print(data['TVCODE'])
         if not data['TVCODE']:
@@ -81,25 +80,29 @@ def tradingview_webhook():
     except Exception as e:
         print ('EXCEPTION ', e)
 
-
-
     TICKER = data['TICKER']
     TIME = data['TIME']
     SIDE = data['SIDE']
 
+
     print(TICKER)
-
-    instrument = checkTicker(TICKER)
-    print('ticker check', instrument)
-
 
     assets = json.loads(r.get('assets'))
     errors = json.loads(r.get('errors'))
-
     print(assets.keys())
 
-    if instrument not in assets:
+    instrument = None
+
+    for a in assets:
+        if assets[a]['symbol'] == TICKER:
+            instrument = a
+            break
+    else:
+        instrument = checkTicker(TICKER)
+        print('ticker check', instrument)
+
         assets[instrument] = {
+            'symbol': TICKER,
             'lev' : 2,
             'prop' : 0,
             'stop' : 0,
@@ -112,11 +115,18 @@ def tradingview_webhook():
         r.set('assets', json.dumps(assets))
         r.set('errors', json.dumps(errors))
         return 'Done'
-    elif assets[instrument]['prop'] == 0:
+
+    if assets[instrument]['prop'] == 0:
         addAlert(instrument, ': No allocation proportion set ' +  ' ' + json.dumps(assets[instrument]))
         return 'Done'
 
+    if assets[instrument]['webhooks'][0] == data:
+        print('DOUBLE WEBHOOK')
+        return 'Done'
+
+
     assets[instrument]['webhooks'].insert(0, data)
+    r.set('assets', json.dumps(assets))
     STOP = assets[instrument]['stop']
     PROP = assets[instrument]['prop']
     LEV = assets[instrument]['lev']
@@ -125,20 +135,14 @@ def tradingview_webhook():
     print('TRADE RESULT ', tradeResult)
     try:
         if tradeResult != False:
-            assets[instrument]['webhooks'].insert(0, data)
+            assets = json.loads(r.get('assets'))
             assets[instrument]['trades'].insert(0, tradeResult)
             assets[instrument]['laststop'] = tradeResult['STOPID']
             assets[instrument]['lastprop'] = PROP
-
-        else:
-            assets[instrument]['webhooks'].insert(0, data)
-
-        r.set('assets', json.dumps(assets))
+            r.set('assets', json.dumps(assets))
 
     except Exception as e:
         print('EXCEPTION ON TRADE RESULT ', e)
-
-
 
 
     return 'TRADING VIEW WEBHOOK'
