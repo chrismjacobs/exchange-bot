@@ -94,7 +94,7 @@ def tradingview_webhook():
     instrument = None
 
     for a in assets:
-        if assets[a]['symbol'] == TICKER:
+        if 'symbol' in assets[a] and assets[a]['symbol'] == TICKER:
             instrument = a
             break
     else:
