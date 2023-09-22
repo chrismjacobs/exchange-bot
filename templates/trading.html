@@ -32,7 +32,6 @@
                     <tr>
                         <th class="" scope="row"><span @click="">Exchange </span> </th>
                         <td class="" style="color:#C97CFE " scope="row"><span @click="">Kraken Futures </span> </td>
-                        <th class="" scope="row"><span @click="">Status </span> </th>
                         <td class="text-danger" scope="row"><span @click="">[[exchange]] Mode </span> </td>
                     </tr>
                     <tr>
@@ -43,11 +42,16 @@
                     </tr>
 
                     <tr>
-                        <th class="" scope="row"><span @click="">Auth Code</span>
-                        <input type="number" class="bg-dark text-white" v-model="passcode"> </input><button @click="getData()" type="button" class="btn btn-sm btn-secondary"> [[API]] </button>
-                        </th>
-
-                        <td class="" scope="row"><span @click="">Misc Errors [[misc.length]]</span> </td>
+                        <th class="" scope="row"><span @click="">Auth Code</span></th>
+                        <td>
+                            <input type="number" class="bg-dark text-white" v-model="passcode"> </input>
+                        </td>
+                        <td>
+                            <button @click="getData()" type="button" class="btn btn-sm btn-secondary"> [[API]] </button>
+                        </td>
+                        <td class="" scope="row">
+                            <span @click="">Misc Errors [[misc.length]]</span>
+                        </td>
                     </tr>
 
                 </tbody>
@@ -69,7 +73,7 @@
                         <th scope="col">Trades</th>
                         <th scope="col">Errors</th>
                         <th scope="col">Edit</th>
-                        <th scope="col">Show</th>
+                        <th scope="col">Action</th>
                         <th scope="col"> </th>
                     </tr>
                     </thead>
@@ -90,9 +94,9 @@
                                     <span v-if="editAsset == key"> Save </span>  <span v-else> Edit </span>
                                 </button>
                             </td>
-                            <td class="">
-                                <button v-if="editAsset == ''" @click="toggleData(key)" type="button" class="btn btn btn-secondary">
-                                    <span v-if="showAsset == key"> [[showData]] </span><span v-else> -- </span>
+                            <td v-if="editAsset == ''">
+                                <button v-if="showData == '--' || showAsset == key" @click="toggleData(key)" type="button" class="btn btn btn-secondary">
+                                    <span> [[showData]] </span>
                                 </button>
                             </td>
                             <td v-if="editAsset == key">
@@ -120,7 +124,7 @@
                             <template v-if="showAsset == key && showData == 'Trades'" v-for="(trade, t) in item.trades" :key="t" >
                                 <tr v-if="t < rows">
                                     <td class="" colspan="2">[[trade.TIME]]</td>
-                                    <td :class="getSideColor(trade.SIDE)" colspan="2">[[trade.SIDE]]</td>
+                                    <td :class="getSideColor(trade.SIDE)" colspan="2">[[trade.side]]</td>
                                     <td class="" colspan="2">[[trade.status]]</td>
                                     <td class="" colspan="3">[[trade.ORDERID]]</td>
                                 </tr>
@@ -226,7 +230,7 @@ let vue = new Vue({
         open: 0,
         liquidation: '',
         stop: '',
-        passcode: 12,
+        passcode: 123,
         assets: {},
         errors: {},
         editAsset: '',
@@ -380,6 +384,8 @@ let vue = new Vue({
                 this.editAsset = ''
                 this.stop = ''
                 this.liquidation = ''
+                this.showData = '--'
+                this.showAsset = ''
             } else {
                 this.editAsset = asset
             }

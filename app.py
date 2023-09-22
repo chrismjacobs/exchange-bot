@@ -143,8 +143,9 @@ def tradingview_webhook():
     except Exception as e:
         print('EXCEPTION ON TRADE RESULT ', e)
 
-
-    return 'TRADING VIEW WEBHOOK'
+    endWebhook = 'TRADING VIEW WEBHOOK COMPLETE: ' + instrument
+    print(endWebhook)
+    return endWebhook
 
 
 def tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID):

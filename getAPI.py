@@ -10,6 +10,7 @@ apiPublicKey = API_KEY_KRAKEN
 # accessible on your Account page under Settings -> API Keys
 apiPrivateKey = API_SEC_KRAKEN
 
+documentation = 'https://docs.futures.kraken.com/'
 
 timeout = 20
 checkCertificate = True  # when using the test environment, this must be set to "False"
