@@ -65,7 +65,7 @@
                     <tr>
                         <th scope="col" style="width:10%">Asset</th>
                         <th scope="col" style="width:15%">Lev(x)</th>
-                        <th scope="col" style="width:15%">Stop(Ticks)</th>
+                        <th scope="col" style="width:15%">Stop($)</th>
                         <th scope="col" style="width:15%">Prop(%)</th>
                         <th scope="col">Price</th>
                         <th scope="col">Position</th>
@@ -260,7 +260,7 @@ let vue = new Vue({
             t4 : 'Use the webhook notifcation with this link:',
             t5 : 'https://exchange-bot-sr3e.onrender.com/webhook',
             t6 : 'In final product use live website link address  + /webhook',
-            STOP : 'Stop is measured by ticks on the asset',
+            STOP : 'Stop is measured by price movement from position open on the asset',
             s1 : 'Stop calculation cannot be too close or more than estimated liquidation price',
             KRAKEN : 'User can still interact with Kraken exchange manually',
             k1 : 'User can move the set stoploss or open a new position',
@@ -371,9 +371,13 @@ let vue = new Vue({
             let sameLev = assetOBJ['lev'] == params['lev']
             let sameStop = assetOBJ['stop'] == params['stop']
 
-            this.checkLev(params, sameLev, assetOBJ)
-            this.checkStop(params, sameStop, assetOBJ)
-            this.checkProp(params, sameProp, assetOBJ)
+            let cl = this.checkLev(params, sameLev, assetOBJ)
+            let cs = this.checkStop(params, sameStop, assetOBJ)
+            let cp = this.checkProp(params, sameProp, assetOBJ)
+
+            if (!cl || !cs || !cp) {
+                return false
+            }
 
             let allSame = sameProp && sameLev && sameStop
 
