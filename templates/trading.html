@@ -124,7 +124,7 @@
                             <template v-if="showAsset == key && showData == 'Trades'" v-for="(trade, t) in item.trades" :key="t" >
                                 <tr v-if="t < rows">
                                     <td class="" colspan="2">[[trade.TIME]]</td>
-                                    <td :class="getSideColor(trade.SIDE)" colspan="2">[[trade.side]]</td>
+                                    <td :class="getSideColor(trade.side)" colspan="2">[[trade.side]]</td>
                                     <td class="" colspan="2">[[trade.status]]</td>
                                     <td class="" colspan="3">[[trade.ORDERID]]</td>
                                 </tr>
@@ -222,7 +222,7 @@ let vue = new Vue({
     data: {
         API : 'API',
         exchange: '',
-        rows: 6,
+        rows: 100,
         alerts: [],
         trades: [],
         funds: ['=='],
