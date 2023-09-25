@@ -1,7 +1,7 @@
 from flask import Flask, request, render_template, jsonify, abort
 import json
 import time
-import datetime
+from datetime import datetime
 from settings import SECRET_KEY, r, CODE, auth_required, EXCHANGE
 # from exchangeAPI import apiFunds, apiTicker, apiOrder
 from getAPI import getInstruments, tradeStatus, closeOpen, openPosition, getFunds, getTicker
