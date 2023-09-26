@@ -26,8 +26,10 @@ def addAlert(instrument, msg):
     now = datetime.now()
     date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
 
+
     if instrument not in errors:
         errors['misc'].insert(0, msg + '//' + date_time)
+        instrument = 'misc'
 
     errorList = errors[instrument]
     errorList.insert(0, msg + '//' + date_time)
