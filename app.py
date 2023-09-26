@@ -61,17 +61,17 @@ def tradingview_webhook():
         data = json.loads(request.data)
     except Exception as e:
         print('DATA LOAD EXCEPTION')
-        addAlert('tradingview', str(e))
+        addAlert('tradingview', 'Invalid json data')
         return 'ERROR'
     print('TV DATA', data)
 
     try:
         print(data['TVCODE'])
         if not data['TVCODE']:
-            addAlert('tradingview', 'No TVCODE found in webhook alert ' + request.data)
+            addAlert('tradingview', 'No TVCODE found in webhook alert')
             return 'ERROR'
         elif int(data['TVCODE']) != int(CODE):
-            addAlert('tradingview', 'TVCODE in webhook alert is incorrect' + request.data)
+            addAlert('tradingview', 'TVCODE in webhook alert is incorrect')
             return 'ERROR'
         else:
             print('CODE SUCCESS')
@@ -116,7 +116,7 @@ def tradingview_webhook():
         return 'Done'
 
     if assets[instrument]['prop'] == 0:
-        addAlert(instrument, ': No allocation proportion set ' +  ' ' + json.dumps(assets[instrument]))
+        addAlert(instrument, 'No allocation proportion set')
         return 'Done'
 
     if assets[instrument]['webhooks'][0] == data:
@@ -272,6 +272,24 @@ def deleteAsset():
     print(msg)
 
     r.set('assets', json.dumps(assets))
+
+    return {'success' : msg}
+
+@app.route('/deleteMisc', methods=['POST'])
+def deleteMisc():
+    pw = request.form ['pw']
+    if int(pw) != int(CODE):
+        return {'error' : 'authentication error'}
+
+
+
+    errors = json.loads(r.get('errors'))
+    errors['misc'] = []
+
+    msg = "Removed Misc Errors"
+    print(msg)
+
+    r.set('errors', json.dumps(errors))
 
     return {'success' : msg}
 

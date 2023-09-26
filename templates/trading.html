@@ -30,13 +30,13 @@
 
                     </tr>
                     <tr>
-                        <th class="" scope="row"><span @click="">Exchange </span> </th>
-                        <td class="" style="color:#C97CFE " scope="row"><span @click="">Kraken Futures </span> </td>
-                        <td class="text-danger" scope="row"><span @click="">[[exchange]] Mode </span> </td>
+                        <th class="" scope="row"><span @click="">Exchange</span> </th>
+                        <td class="" style="color:#C97CFE " scope="row"><span @click="">Kraken Futures</span> </td>
+                        <td class="text-danger" scope="row" colspan="2"><span @click="">[[exchange]] Mode </span> </td>
                     </tr>
                     <tr>
                         <th class="" scope="row"><span @click="">Funds </span> </th>
-                        <td class="text-warning" scope="row"><span> [[funds]]  </span> </td>
+                        <td class="text-warning" scope="row"><span> [[getFunds()]] </span> </td>
                         <td class="text-warning" scope="row"><span @click="">Open Positions  [[calcOpen]]%</span> </td>
                         <td class="text-warning" scope="row"><span > Tot Allocations  [[calcAllo]]%</span> </td>
                     </tr>
@@ -50,9 +50,20 @@
                             <button @click="getData()" type="button" class="btn btn-sm btn-secondary"> [[API]] </button>
                         </td>
                         <td class="" scope="row">
-                            <span @click="">Misc Errors [[misc.length]]</span>
+                            <span @click="showMisc = !showMisc">Misc Errors [[misc.length]] </span>
+                            <button v-if="showMisc" @click="miscDelete()" type="button" class="btn btn-sm btn-danger ml-2">
+                                <span> X </span>
+                            </button>
                         </td>
                     </tr>
+                    <template v-if="showMisc">
+                        <tr v-for="(item, key) in misc" :key="key" >
+                            <td align="right" colspan="4">
+                               [[item]]
+                            </td>
+                        </tr>
+                    </template>
+
 
                 </tbody>
 
@@ -73,7 +84,7 @@
                         <th scope="col">Trades</th>
                         <th scope="col">Errors</th>
                         <th scope="col">Edit</th>
-                        <th scope="col">Action</th>
+                        <th scope="col">Data</th>
                         <th scope="col"> </th>
                     </tr>
                     </thead>
@@ -217,7 +228,13 @@ let vue = new Vue({
     el: '#vue-app',
     delimiters: ['[[', ']]'],
     mounted: function() {
+        let code = localStorage.getItem('code')
+
+        if (code) {
+            this.passcode = code
+        }
         this.getData()
+
     },
     data: {
         API : 'API',
@@ -225,7 +242,7 @@ let vue = new Vue({
         rows: 100,
         alerts: [],
         trades: [],
-        funds: ['=='],
+        funds: ['==', '==', '=='],
         misc: [],
         open: 0,
         liquidation: '',
@@ -235,6 +252,7 @@ let vue = new Vue({
         errors: {},
         editAsset: '',
         totalProp: 0,
+        showMisc: false,
         showData: '--',
         showAsset: '',
         showNotes: true,
@@ -265,6 +283,10 @@ let vue = new Vue({
         }
     },
     methods: {
+        getFunds: function () {
+            let string = '$' + this.funds[1] + ' (' + this.funds[2] + ')'
+            return string
+        },
         getSum: function (asset, mode) {
             let a = this.assets[asset]
             return a[mode].length
@@ -466,6 +488,7 @@ let vue = new Vue({
                     vue.getAssets()
                     parseData = JSON.parse(data)
                     vue.funds = parseData.funds
+                    console.log(vue.funds)
                     vue.misc = parseData.misc
                     vue.exchange = parseData.exchange
                 }
@@ -503,6 +526,8 @@ let vue = new Vue({
         },
         setAsset: function (asset) {
             // console.log('setAssets', this.parameters)
+
+            localStorage.setItem('code', this.passcode)
 
             params = this.parameters
 
@@ -559,6 +584,29 @@ let vue = new Vue({
                     alert(data.error)
                     console.log(data.error)
                     vue.editAsset = ''
+                } else {
+                    location.reload()
+                }
+            })
+            .fail(function(){
+                  alert('error has occurred deleteAsset');
+            });
+        },
+        miscDelete: function () {
+            // console.log('authDelete', this.assetDelete)
+
+            $.ajax({
+                data : {
+                    pw: this.passcode
+                },
+                type : 'POST',
+                url : '/deleteMisc'
+
+            })
+            .done(function(data) {
+                if (data.error) {
+                    alert(data.error)
+                    console.log(data.error)
                 } else {
                     location.reload()
                 }
