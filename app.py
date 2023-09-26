@@ -13,7 +13,7 @@ app.config['DEBUG'] = True
 
 
 @app.route('/')
-@auth_required
+#@auth_required
 def home():
 
     context = {}
@@ -190,8 +190,8 @@ def tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID):
 @app.route('/getData', methods=['POST'])
 def getData():
     pw = request.form ['pw']
-    if int(pw) != int(CODE):
-        return {'error' : 'authentication code input required'}
+    # if int(pw) != int(CODE):
+    #     return {'error' : 'authentication code input required'}
 
     errors = json.loads(r.get('errors'))
 
@@ -214,8 +214,8 @@ def getData():
 @app.route('/getAssets', methods=['POST'])
 def getAssets():
     pw = request.form ['pw']
-    if int(pw) != int(CODE):
-        return {'error' : 'authentication code'}
+    # if int(pw) != int(CODE):
+    #     return {'error' : 'authentication code'}
 
 
     assets = json.loads(r.get('assets'))
