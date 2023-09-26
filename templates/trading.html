@@ -81,7 +81,7 @@
                     <template v-for="(item, key) in assets" :key="key" >
                         <tr class="">
                             <th class= "text-xsmall" :style="getAssetColor(key)" scope="row"><span>[[key.toUpperCase() ]]</span> </th>
-                            <td class="" ><span v-if="editAsset == key"> <input class= "text-xsmall bg-dark" :style="getAssetColor(key)" type="number"  v-model="parameters.lev"></input></span><span v-else>[[item.lev]]<span></td>
+                            <td :style="getLevStyle(item.lev, item.lastlev)" ><span v-if="editAsset == key"> <input class= "text-xsmall bg-dark" :style="getAssetColor(key)" type="number"  v-model="parameters.lev"></input></span><span v-else >[[item.lev]]<span> <br><span v-if="item.position && item.lastlev && item.lastlev != item.lev"> leverage mismatch</span></td>
                             <td class="" ><span v-if="editAsset == key"> <input class= "text-xsmall bg-dark" :style="getAssetColor(key)" type="number"  v-model="parameters.stop"></input></span><span v-else>[[item.stop]]<span></td>
                             <td class="" ><span v-if="editAsset == key"> <input class= "text-xsmall bg-dark" :style="getAssetColor(key)" type="number"  v-model="parameters.prop"></input></span><span v-else>[[item.prop]]<span></td>
                             <td class="" ><span>[[item.price]]</span></td>
@@ -445,9 +445,9 @@ let vue = new Vue({
             }
             return sideClass[side]
         },
-        getLevStyle: function () {
-            if (this.orderData.leverage < 1) {
-                return 'background:red'
+        getLevStyle: function (lev, lastlev) {
+            if (lastlev && lev != lastlev) {
+                return 'background:#B61E00'
             }
         },
         getData: function () {
