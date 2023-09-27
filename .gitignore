@@ -5,7 +5,9 @@ config.py
 function.py
 clientExample.py
 rPractice.py
-
-
+function.py
+exchangeAPI.py
+rPractice.py
+extrapy/
 
 __pycache__

@@ -5,11 +5,22 @@ from datetime import datetime
 from settings import SECRET_KEY, r, CODE, auth_required, EXCHANGE
 # from exchangeAPI import apiFunds, apiTicker, apiOrder
 from getAPI import getInstruments, tradeStatus, closeOpen, openPosition, getFunds, getTicker
-
+import logging
+from logging.handlers import SysLogHandler
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
 app.config['DEBUG'] = True
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    filename="basic.log",
+    filemode='w' ## write
+)
+
 
 
 @app.route('/')
@@ -34,12 +45,13 @@ def addAlert(instrument, msg):
     errorList = errors[instrument]
     errorList.insert(0, msg + '//' + date_time)
 
+
     r.set('errors', json.dumps(errors))
     return True
 
 
 def checkTicker(ticker):
-    print('CHECK TICKER')
+    logging.info('CHECK TICKER')
     if 'USD' not in ticker:
         addAlert(ticker, 'USD not found in ticker')
         return False
@@ -60,13 +72,13 @@ def tradingview_webhook():
     try:
         data = json.loads(request.data)
     except Exception as e:
-        print('DATA LOAD EXCEPTION')
+        logging.info('DATA LOAD EXCEPTION')
         addAlert('tradingview', 'Invalid json data')
         return 'ERROR'
-    print('TV DATA', data)
+    logging.info('TV DATA', data)
 
     try:
-        print(data['TVCODE'])
+        logging.info(data['TVCODE'])
         if not data['TVCODE']:
             addAlert('tradingview', 'No TVCODE found in webhook alert')
             return 'ERROR'
@@ -74,21 +86,21 @@ def tradingview_webhook():
             addAlert('tradingview', 'TVCODE in webhook alert is incorrect')
             return 'ERROR'
         else:
-            print('CODE SUCCESS')
+            logging.info('CODE SUCCESS')
 
     except Exception as e:
-        print ('EXCEPTION ', e)
+        logging.info ('EXCEPTION ', e)
 
     TICKER = data['TICKER']
     TIME = data['TIME']
     SIDE = data['SIDE']
 
 
-    print(TICKER)
+    logging.info(TICKER)
 
     assets = json.loads(r.get('assets'))
     errors = json.loads(r.get('errors'))
-    print(assets.keys())
+    logging.info(assets.keys())
 
     instrument = None
 
@@ -98,7 +110,7 @@ def tradingview_webhook():
             break
     else:
         instrument = checkTicker(TICKER)
-        print('ticker check', instrument)
+        logging.info('ticker check', instrument)
 
         assets[instrument] = {
             'symbol': TICKER,
@@ -120,12 +132,12 @@ def tradingview_webhook():
         return 'Done'
 
     if assets[instrument]['webhooks'][0] == data:
-        print('DOUBLE WEBHOOK')
+        logging.info('DOUBLE WEBHOOK')
         return 'Done'
 
 
     assets[instrument]['webhooks'].insert(0, data)
-    print(data, assets[instrument]['webhooks'][0])
+    logging.info(data, assets[instrument]['webhooks'][0])
     r.set('assets', json.dumps(assets))
 
     STOP = assets[instrument]['stop']
@@ -133,7 +145,7 @@ def tradingview_webhook():
     LEV = assets[instrument]['lev']
     STOPID = assets[instrument]['laststop']
     tradeResult = tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID)
-    print('TRADE RESULT ', tradeResult)
+    logging.info('TRADE RESULT ', tradeResult)
     try:
         if tradeResult != False:
             assets = json.loads(r.get('assets'))
@@ -143,10 +155,10 @@ def tradingview_webhook():
             r.set('assets', json.dumps(assets))
 
     except Exception as e:
-        print('EXCEPTION ON TRADE RESULT ', e)
+        logging.info('EXCEPTION ON TRADE RESULT ', e)
 
     endWebhook = 'TRADING VIEW WEBHOOK COMPLETE: ' + instrument
-    print(endWebhook)
+    logging.info(endWebhook)
     return endWebhook
 
 
@@ -155,11 +167,11 @@ def tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID):
     TSlist = tradeStatus(instrument)
     TS = TSlist[0]
     if TS == 'long' and SIDE == 'buy':
-        print('NO ACTION ' + instrument)
+        logging.info('NO ACTION ' + instrument)
         return False
 
     elif TS == 'short' and SIDE == 'sell':
-        print('NO ACTION ' + instrument)
+        logging.info('NO ACTION ' + instrument)
         return False
 
     elif TS == 'long' and SIDE == 'sell':
@@ -178,7 +190,7 @@ def tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID):
 
     elif TS == None:
         tradeData = openPosition(instrument, STOP, PROP, LEV, SIDE)
-        print('New Postion ', tradeData)
+        logging.info('New Postion ', tradeData)
         if 'error' in tradeData:
             addAlert(instrument, tradeData)
             return False
@@ -226,7 +238,7 @@ def getAssets():
     for a in assets:
         assets[a]['price'] = getTicker(a)
         TSlist = tradeStatus(a)
-        print(TSlist)
+        logging.info(TSlist)
         assets[a]['position'] = TSlist[0]
         assets[a]['lastlev'] = TSlist[1]
         assets[a]['errors'] = errors[a]
@@ -262,14 +274,12 @@ def deleteAsset():
 
     asset = request.form['asset']
 
-
-
     assets = json.loads(r.get('assets'))
 
     removedAsset = assets.pop(asset, asset +' not found')
 
     msg = "Removed Asset: " + asset
-    print(msg)
+    logging.info(msg)
 
     r.set('assets', json.dumps(assets))
 
@@ -287,7 +297,7 @@ def deleteMisc():
     errors['misc'] = []
 
     msg = "Removed Misc Errors"
-    print(msg)
+    logging.info(msg)
 
     r.set('errors', json.dumps(errors))
 

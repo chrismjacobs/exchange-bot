@@ -7,19 +7,18 @@ from flask import make_response, request
 LOCAL = False
 
 try:
-    import config
+    import config as config
     SECRET_KEY = config.SECRET_KEY
-    # PASSWORD = config.PASSWORD
     REDIS_URL = config.REDIS_URL
     API_KEY_KRAKEN = config.API_KEY_KRAKEN
     API_SEC_KRAKEN = config.API_SEC_KRAKEN
     DEMO_API_KEY_KRAKEN = config.DEMO_API_KEY_KRAKEN
     DEMO_API_SEC_KRAKEN = config.DEMO_API_SEC_KRAKEN
     EXCHANGE = config.EXCHANGE
+    USER = config.USER
+    PASSWORD = config.PASSWORD
+    CODE = config.CODE
     LOCAL = True
-    USER = 'User'
-    PASSWORD = 'Pass'
-    CODE = 123
     print('CONFIG SUCCESS')
 except:
     print('ACCESS OS ENVIRON CREDENTIALS')
@@ -59,10 +58,17 @@ if REDIS_URL:
 
     print('REDIS', r)
     print('REDIS', r.keys())
+
+    lastVersion = r.get('version')
+    if not lastVersion:
+        r.set('version', EXCHANGE.lower())
+    elif lastVersion != EXCHANGE.lower():
+        r.delete('assets')
+        r.delete('errors')
+        r.set('version', EXCHANGE.lower())
+
     if not r.get('assets'):
         r.set('assets', json.dumps({}))
-    if not r.get('webhooks'):
-        r.set('webhooks', json.dumps({}))
     if not r.get('errors'):
         r.set('errors', json.dumps({}))
 
