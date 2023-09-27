@@ -24,7 +24,7 @@ logging.basicConfig(
 
 
 @app.route('/')
-#@auth_required
+@auth_required
 def home():
 
     context = {}
@@ -78,7 +78,7 @@ def tradingview_webhook():
     logging.info('TV DATA' +  json.dumps(data))
 
     try:
-        logging.info(data['TVCODE'])
+        ##logging.info(data['TVCODE'])
         if not data['TVCODE']:
             addAlert('tradingview', 'No TVCODE found in webhook alert')
             return 'ERROR'
@@ -100,7 +100,7 @@ def tradingview_webhook():
 
     assets = json.loads(r.get('assets'))
     errors = json.loads(r.get('errors'))
-    logging.info(str(assets.keys()))
+    logging.info('ASSETS KEYS ' + str(assets.keys()))
 
     instrument = None
 

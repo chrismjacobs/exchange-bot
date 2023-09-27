@@ -4,19 +4,14 @@ import krakenAPI as kAPI
 from datetime import datetime
 from settings import API_KEY_KRAKEN, API_SEC_KRAKEN, APIPATH
 import logging
-import sys
 
-rootLogger = logging.basicConfig(
+logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
-    handlers=[
-        logging.FileHandler("debug.log"),
-        logging.StreamHandler()
-    ]
-
+    filename="basic.log",
+    filemode='w' ## write
 )
-
 
 
 # accessible on your Account page under Settings -> API Keys

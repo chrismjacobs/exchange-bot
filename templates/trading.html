@@ -255,7 +255,7 @@ let vue = new Vue({
         showMisc: false,
         showData: '--',
         showAsset: '',
-        showNotes: true,
+        showNotes: false,
         assetDelete: '',
         parameters: {
             lev : '',
@@ -271,7 +271,13 @@ let vue = new Vue({
             p2 : 'When changing proportion alloacation of an asset, the reblance will occur when a new position is opened',
             p3 : 'Changing proportions on assets may be blocked if the new proportions conflict with current open position allocations',
             p4 : '!! If you remove funds from your collateral on the exchange while positions are open, you may get an insufficientFunds error if another asset tries to open a new position',
-
+            TRADINGVIEW : 'Webhook Alerts set once per bar close on hourly timeframe, alert message must use the following json format for buy or sell:',
+            t1 : '{"TICKER":"{{'{{ticker}}'}}", "SIDE":"buy", "TVCODE":"111", "TIME":"{{'{{timenow}}'}}", "TF":"{{'{{interval}}'}}"}',
+            t2 : '{"TICKER":"{{'{{ticker}}'}}", "SIDE":"sell", "TVCODE":"111", "TIME":"{{'{{timenow}}'}}", "TF":"{{'{{interval}}'}}"}',
+            t3 : 'TVCODE must match app environment variable, it must always be a number',
+            t4 : 'Use the webhook notifcation with this link:',
+            t5 : 'https://exchange-bot-sr3e.onrender.com/webhook',
+            t6 : 'In final product use live website link address  + /webhook',
             STOP : 'Stop is measured by price movement from position open on the asset',
             s1 : 'Stop calculation cannot be too close or more than estimated liquidation price',
             KRAKEN : 'User can still interact with Kraken exchange manually',
@@ -620,7 +626,9 @@ let vue = new Vue({
         calcOpen() {
             let open = 0
             for (let a in this.assets) {
-                open += this.assets[a]['lastprop']
+                if (this.assets[a]['position']) {
+                    open += this.assets[a]['lastprop']
+                }
             }
             return open
         },
