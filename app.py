@@ -75,7 +75,7 @@ def tradingview_webhook():
         logging.info('DATA LOAD EXCEPTION')
         addAlert('tradingview', 'Invalid json data')
         return 'ERROR'
-    logging.info('TV DATA', data)
+    logging.info('TV DATA' +  json.dumps(data))
 
     try:
         logging.info(data['TVCODE'])
@@ -100,7 +100,7 @@ def tradingview_webhook():
 
     assets = json.loads(r.get('assets'))
     errors = json.loads(r.get('errors'))
-    logging.info(assets.keys())
+    logging.info(str(assets.keys()))
 
     instrument = None
 
@@ -110,7 +110,7 @@ def tradingview_webhook():
             break
     else:
         instrument = checkTicker(TICKER)
-        logging.info('ticker check', instrument)
+        logging.info('ticker check ' +  instrument)
 
         assets[instrument] = {
             'symbol': TICKER,
@@ -137,7 +137,6 @@ def tradingview_webhook():
 
 
     assets[instrument]['webhooks'].insert(0, data)
-    logging.info(data, assets[instrument]['webhooks'][0])
     r.set('assets', json.dumps(assets))
 
     STOP = assets[instrument]['stop']
@@ -145,7 +144,10 @@ def tradingview_webhook():
     LEV = assets[instrument]['lev']
     STOPID = assets[instrument]['laststop']
     tradeResult = tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID)
-    logging.info('TRADE RESULT ', tradeResult)
+    if tradeResult:
+        logging.info('TRADE RESULT ' + json.dumps(tradeResult))
+    else:
+        logging.warning('TRADE RESULT FALSE')
     try:
         if tradeResult != False:
             assets = json.loads(r.get('assets'))
@@ -155,7 +157,7 @@ def tradingview_webhook():
             r.set('assets', json.dumps(assets))
 
     except Exception as e:
-        logging.info('EXCEPTION ON TRADE RESULT ', e)
+        logging.info('EXCEPTION ON TRADE RESULT')
 
     endWebhook = 'TRADING VIEW WEBHOOK COMPLETE: ' + instrument
     logging.info(endWebhook)
@@ -190,7 +192,6 @@ def tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID):
 
     elif TS == None:
         tradeData = openPosition(instrument, STOP, PROP, LEV, SIDE)
-        logging.info('New Postion ', tradeData)
         if 'error' in tradeData:
             addAlert(instrument, tradeData)
             return False
@@ -238,7 +239,7 @@ def getAssets():
     for a in assets:
         assets[a]['price'] = getTicker(a)
         TSlist = tradeStatus(a)
-        logging.info(TSlist)
+        logging.info('TSList ' + str(TSlist))
         assets[a]['position'] = TSlist[0]
         assets[a]['lastlev'] = TSlist[1]
         assets[a]['errors'] = errors[a]
