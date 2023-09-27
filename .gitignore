@@ -9,5 +9,7 @@ function.py
 exchangeAPI.py
 rPractice.py
 extrapy/
+debug.log
+
 
 __pycache__
