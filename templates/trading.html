@@ -159,12 +159,6 @@
                             <button @click="showNotes = !showNotes" type="button" class="btn btn btn-secondary">
                                 <span> Notes </span>
                             </button>
-                            <button @click="showAssetData = !showAssetData" type="button" class="btn btn btn-secondary">
-                                <span> Asset </span>
-                            </button>
-                            <div v-if="showAssetData" style="display:none">
-                                [[assets]]
-                            </div>
                         </th>
                         <th scope="col"> </th>
                     </tr>
@@ -317,26 +311,6 @@ let vue = new Vue({
                 this.showData = '--'
             }
         },
-        calcUnopened: function (asset) {
-            let unopen = 0
-            for (let a in this.assets) {
-                if (this.assets[a]['position'] == null && a != asset) {
-                    unopen += this.assets[a]['prop']
-                }
-            }
-            return unopen
-
-        },
-        calcOpenSeparate: function (asset) {
-            let open = 0
-            for (let a in this.assets) {
-                if (this.assets[a]['position'] && a != asset) {
-                    open += this.assets[a]['lastprop']
-                }
-            }
-            return open
-
-        },
         checkLev: function (params, sameLev, assetOBJ) {
             if (this.editAsset != '' && !sameLev){
                 // console.log(params['lev'])
@@ -372,21 +346,51 @@ let vue = new Vue({
             }
             return true
         },
-        checkProp: function (params, sameProp, assetOBJ) {
+        calcUnopened: function (asset) {
+            let unopen = 0
+            for (let a in this.assets) {
+                console.log(a, a != asset, this.assets[a]['position'] == null)
+                if (this.assets[a]['position'] == null && a != asset) {
+                    unopen += this.assets[a]['prop']
+                }
+            }
+            return unopen
+
+        },
+        calcOpenSeparate: function (asset) {
+            let open = 0
+            for (let a in this.assets) {
+                if (this.assets[a]['position'] && a != asset) {
+                    open += this.assets[a]['lastprop']
+                }
+            }
+            return open
+
+        },
+        checkProp: function (params, sameProp, assetOBJ, asset) {
             if (this.editAsset != '' && !sameProp){
                 totProp = 0
                 let aPosition = assetOBJ['position']
 
+                let unOpened = this.calcUnopened(asset)
+
+                let paramsProp = parseInt(params['prop'])
+                let openSeparate = this.calcOpenSeparate(asset)
+
                 /// asset has no position open
-                let available1 = 100 - (this.calcOpenTotal + this.calcUnopened(asset))
-                let available2 = 100 - (this.calcUnopened(asset) + this.calcOpenSeparate(asset))
-                // console.log(aPosition, available1, params['prop'], this.calcOpen, this.calcUnopened(asset))
-                if (!aPosition && available1 < params['prop']) {
-                    alert('Proportion balance too large; please close open positions to allow bot to rebalance correctly (a) ' + available1 + ' ' + params['prop'] + ' ' + this.calcOpenTotal + ' ' + this.calcUnopened(asset) )
+                let available1 = 100 - (this.calcOpenTotal + unOpened)  /// Openpostions + waiting postions
+                let available2 = 100 - (unOpened + openSeparate)
+                console.log(aPosition, available1, available2, paramsProp, this.calcOpenTotal, unOpened)
+                if (unOpened + paramsProp > 100) {
+                    alert('Total Proportions cannot be greater than 100')
                     return false
                 }
-                if (aPosition &&  available2 < params['prop']) {
-                    alert('Proportion balance too large; please close open positions to allow bot to rebalance correctly (b) ' + available2 + ' ' + params['prop'] + ' ' + this.calcUnopened(asset) + ' ' + this.calcOpenSeparate(asset) )
+                else if (!aPosition && paramsProp > available1) {
+                    alert('Proportion balance too large; if positions are open please close to allow bot to rebalance correctly (a) ' + available1 + ' ' + paramsProp + ' ' + this.calcOpenTotal + ' ' + unOpened )
+                    return false
+                }
+                else if (aPosition &&  available2 < paramsProp) {
+                    alert('Proportion balance too large; if positions are open please close to allow bot to rebalance correctly (b) ' + available2 + ' ' + paramsProp + ' ' + unOpened + ' ' + openSeparate )
                     return false
                 }
             }
@@ -402,7 +406,7 @@ let vue = new Vue({
 
             let cl = this.checkLev(params, sameLev, assetOBJ)
             let cs = this.checkStop(params, sameStop, assetOBJ)
-            let cp = this.checkProp(params, sameProp, assetOBJ)
+            let cp = this.checkProp(params, sameProp, assetOBJ, asset)
 
             if (!cl || !cs || !cp) {
                 return false
@@ -411,7 +415,7 @@ let vue = new Vue({
             let allSame = sameProp && sameLev && sameStop
 
             if (this.editAsset != '' && !allSame) {
-                this.setAsset(asset)
+                //this.setAsset(asset)
             } else if (this.editAsset == asset) {
 
                 this.editAsset = ''
@@ -529,7 +533,7 @@ let vue = new Vue({
                     return false
                 }
                 parseData = JSON.parse(data)
-                // console.log(parseData['assets'])
+                console.log(parseData)
                 vue.assets = parseData
                 vue.API = 'API'
             })
