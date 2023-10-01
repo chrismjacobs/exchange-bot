@@ -2,7 +2,7 @@ from flask import Flask, request, render_template, jsonify, abort
 import json
 import time
 from datetime import datetime
-from settings import SECRET_KEY, r, CODE, auth_required, EXCHANGE
+from settings import SECRET_KEY, r, CODE, auth_required, EXCHANGE, DEBUG
 # from exchangeAPI import apiFunds, apiTicker, apiOrder
 from getAPI import getInstruments, tradeStatus, closeOpen, openPosition, getFunds, getTicker
 import logging
@@ -10,11 +10,11 @@ from logging.handlers import SysLogHandler
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
-app.config['DEBUG'] = True
+app.config['DEBUG'] = DEBUG
 
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format="%(asctime)s %(levelname)s %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
     filename="basic.log",
@@ -179,21 +179,21 @@ def tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID):
     elif TS == 'long' and SIDE == 'sell':
         tradeData = closeOpen(instrument, STOP, PROP, LEV, STOPID)
         if 'error' in tradeData:
-            addAlert(instrument, tradeData)
+            addAlert(instrument, json.dumps(tradeData))
             return False
         return tradeData
 
     elif TS == 'short' and SIDE == 'buy':
         tradeData = closeOpen(instrument, STOP, PROP, LEV, STOPID)
         if 'error' in tradeData:
-            addAlert(instrument, tradeData)
+            addAlert(instrument, json.dumps(tradeData))
             return False
         return tradeData
 
     elif TS == None:
         tradeData = openPosition(instrument, STOP, PROP, LEV, SIDE)
         if 'error' in tradeData:
-            addAlert(instrument, tradeData)
+            addAlert(instrument, json.dumps(tradeData))
             return False
         return tradeData
 

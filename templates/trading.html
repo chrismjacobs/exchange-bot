@@ -37,7 +37,7 @@
                     <tr>
                         <th class="" scope="row"><span @click="">Funds </span> </th>
                         <td class="text-warning" scope="row"><span> [[getFunds()]] </span> </td>
-                        <td class="text-warning" scope="row"><span @click="">Open Positions  [[calcOpen]]%</span> </td>
+                        <td class="text-warning" scope="row"><span @click="">Open Positions  [[calcOpenTotal]]%</span> </td>
                         <td class="text-warning" scope="row"><span > Tot Allocations  [[calcAllo]]%</span> </td>
                     </tr>
 
@@ -155,10 +155,16 @@
                 <table class="table table-dark" class="table-responsive">
                     <thead>
                     <tr>
-                        <th scope="col" style="width:10%">
+                        <th scope="col">
                             <button @click="showNotes = !showNotes" type="button" class="btn btn btn-secondary">
                                 <span> Notes </span>
                             </button>
+                            <button @click="showAssetData = !showAssetData" type="button" class="btn btn btn-secondary">
+                                <span> Asset </span>
+                            </button>
+                            <div v-if="showAssetData" style="display:none">
+                                [[assets]]
+                            </div>
                         </th>
                         <th scope="col"> </th>
                     </tr>
@@ -254,6 +260,7 @@ let vue = new Vue({
         totalProp: 0,
         showMisc: false,
         showData: '--',
+        showAssetData: false,
         showAsset: '',
         showNotes: false,
         assetDelete: '',
@@ -320,7 +327,7 @@ let vue = new Vue({
             return unopen
 
         },
-        calcOpened: function (asset) {
+        calcOpenSeparate: function (asset) {
             let open = 0
             for (let a in this.assets) {
                 if (this.assets[a]['position'] && a != asset) {
@@ -370,16 +377,16 @@ let vue = new Vue({
                 totProp = 0
                 let aPosition = assetOBJ['position']
 
-                /// assest has no position open
-                let available1 = 100 - (this.calcOpen + this.calcUnopened(asset))
-                let available2 = 100 - (this.calcUnopened(asset) + this.calcOpened(asset))
+                /// asset has no position open
+                let available1 = 100 - (this.calcOpenTotal + this.calcUnopened(asset))
+                let available2 = 100 - (this.calcUnopened(asset) + this.calcOpenSeparate(asset))
                 // console.log(aPosition, available1, params['prop'], this.calcOpen, this.calcUnopened(asset))
-                if (!aPosition &&  available1 < params['prop']) {
-                    alert('Proportion balance to large; please close open positions to allow bot to rebalance correctly')
+                if (!aPosition && available1 < params['prop']) {
+                    alert('Proportion balance too large; please close open positions to allow bot to rebalance correctly (a) ' + available1 + ' ' + params['prop'] + ' ' + this.calcOpenTotal + ' ' + this.calcUnopened(asset) )
                     return false
                 }
                 if (aPosition &&  available2 < params['prop']) {
-                    alert('Proportion balance to large; please close open positions to allow bot to rebalance correctly')
+                    alert('Proportion balance too large; please close open positions to allow bot to rebalance correctly (b) ' + available2 + ' ' + params['prop'] + ' ' + this.calcUnopened(asset) + ' ' + this.calcOpenSeparate(asset) )
                     return false
                 }
             }
@@ -623,7 +630,7 @@ let vue = new Vue({
         }
     },
     computed: {
-        calcOpen() {
+        calcOpenTotal() {
             let open = 0
             for (let a in this.assets) {
                 if (this.assets[a]['position']) {

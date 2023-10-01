@@ -6,7 +6,7 @@ from settings import API_KEY_KRAKEN, API_SEC_KRAKEN, APIPATH
 import logging
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format="%(asctime)s %(levelname)s %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
     filename="basic.log",
@@ -251,6 +251,7 @@ def openPosition(instrument, STOP, PROP, LEV, SIDE):
     }
     openResult = cfPrivate.send_order_1(openOrder)
     openRes = json.loads(openResult)
+    print('OPEN RES 1', openRes)
     if len(openRes['sendStatus']) < 2:
         #{'result': 'success', 'sendStatus': {'status': 'invalidSize'}, 'serverTime': '2023-09-19T07:01:43.680Z'}
         logging.warning('openNewOrder Error: ' + str(openRes['sendStatus']))
@@ -274,6 +275,7 @@ def openPosition(instrument, STOP, PROP, LEV, SIDE):
 
     stopResult = cfPrivate.send_order_1(stopOrder)
     stopRes = json.loads(stopResult)
+    print('STOP RES 1', openRes)
     if len(stopRes['sendStatus']) < 2:
         #{'result': 'success', 'sendStatus': {'status': 'invalidSize'}, 'serverTime': '2023-09-19T07:01:43.680Z'}
         logging.warning('stopNewOrder Error: ' + str(stopRes['sendStatus']))

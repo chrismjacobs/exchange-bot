@@ -19,6 +19,7 @@ try:
     PASSWORD = config.PASSWORD
     CODE = config.CODE
     LOCAL = True
+    DEBUG = True
     print('CONFIG SUCCESS')
 except:
     print('ACCESS OS ENVIRON CREDENTIALS')
@@ -32,6 +33,7 @@ except:
     PASSWORD = os.environ['PASSWORD']
     REDIS_URL = os.environ['REDIS_URL']
     EXCHANGE = os.environ['EXCHANGE']
+    DEBUG = False
 
 
 APIPATH = "https://futures.kraken.com"
