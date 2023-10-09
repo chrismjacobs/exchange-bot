@@ -5,7 +5,7 @@ from datetime import datetime
 from settings import API_KEY_KRAKEN, API_SEC_KRAKEN, APIPATH
 import logging
 
-logger = logging.getLogger("exchange bot")
+logger = logging.getLogger("exchange api")
 handler = logging.StreamHandler()
 logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
