@@ -134,6 +134,9 @@ def tradingview_webhook():
 
 
     assets[instrument]['webhooks'].insert(0, data)
+    if len(assets[instrument]['webhooks']) > 300:
+        assets[instrument]['webhooks'].pop()
+
     r.set('assets', json.dumps(assets))
 
     STOP = assets[instrument]['stop']
@@ -154,6 +157,8 @@ def tradingview_webhook():
         if tradeResult != False:
             assets = json.loads(r.get('assets'))
             assets[instrument]['trades'].insert(0, tradeResult)
+            if len(assets[instrument]['trades']) > 300:
+                assets[instrument]['trades'].pop()
             assets[instrument]['laststop'] = tradeResult['STOPID']
             assets[instrument]['lastprop'] = PROP
             r.set('assets', json.dumps(assets))
