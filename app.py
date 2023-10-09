@@ -140,7 +140,11 @@ def tradingview_webhook():
     PROP = assets[instrument]['prop']
     LEV = assets[instrument]['lev']
     STOPID = assets[instrument]['laststop']
-    tradeResult = tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID)
+    try:
+        tradeResult = tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID)
+    except:
+        logger.info('TRADE RESULT ERROR 2')
+        print('TRADE RESULT ERROR 2', e)
     print('TRADE RESULT ', type(tradeResult))
     if tradeResult:
         logger.info('TRADE RESULT ' + json.dumps(tradeResult))
