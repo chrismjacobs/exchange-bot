@@ -253,7 +253,18 @@ def openPosition(instrument, STOP, PROP, LEV, SIDE):
         "side": SIDE,
         "size": SIZE
     }
-    openResult = cfPrivate.send_order_1(openOrder)
+    print('OPEN ORDER', instrument, openOrder)
+    try:
+        openResult = cfPrivate.send_order_1(openOrder)
+    except:
+        openOrder = {
+            "orderType": "mkt",
+            "symbol": instrument.lower(),
+            "side": SIDE,
+            "size": SIZE
+        }
+        openResult = cfPrivate.send_order_1(openOrder)
+
     openRes = json.loads(openResult)
     print('OPEN RES 1', openRes)
     if len(openRes['sendStatus']) < 2:
