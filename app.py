@@ -145,8 +145,8 @@ def tradingview_webhook():
     STOPID = assets[instrument]['laststop']
     try:
         tradeResult = tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID)
-    except:
-        logger.info('TRADE RESULT ERROR 2 ' + str(e) )
+    except Exception as e:
+        logger.warning('TRADE RESULT ERROR 2 ' + str(e) )
         #print('TRADE RESULT ERROR 2', e)
     print('TRADE RESULT ', type(tradeResult))
     if tradeResult:

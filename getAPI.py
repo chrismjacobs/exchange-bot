@@ -87,7 +87,7 @@ def getTicker(instrument):
         ## loggerAPI.warning('TICKERS ' + t['symbol'] + str(t['symbol'] == instrument))
         if t['symbol'].upper() == instrument.upper():
             ### symbols appear as lowercase
-            loggerAPI.debug ('getTicker: \n' +  t['symbol'] + ':\n ' + str(t))
+            loggerAPI.debug ('getTicker' +  t['symbol'] + ':\n ' + str(t))
             return t['markPrice']
 
 
