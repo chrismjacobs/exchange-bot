@@ -86,7 +86,7 @@ def tradingview_webhook():
             logger.info('CODE SUCCESS')
 
     except Exception as e:
-        logger.info ('EXCEPTION ', e)
+        logger.info ('EXCEPTION ' + str(e))
 
     TICKER = data['TICKER']
     TIME = data['TIME']
