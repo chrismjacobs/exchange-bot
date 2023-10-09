@@ -415,7 +415,7 @@ let vue = new Vue({
             let allSame = sameProp && sameLev && sameStop
 
             if (this.editAsset != '' && !allSame) {
-                //this.setAsset(asset)
+                this.setAsset(asset)
             } else if (this.editAsset == asset) {
 
                 this.editAsset = ''
@@ -500,6 +500,7 @@ let vue = new Vue({
                 if (data.error) {
                     vue.API = 'API'
                     alert(data.error)
+                    localStorage.setItem('code', null)
                     return false
                 } else {
                     vue.getAssets()
