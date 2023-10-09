@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 handler = logging.StreamHandler()
 logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
-logger.debug('Test Logger App')
+logger.warning('Test Logger App')
 
 
 @app.route('/')
@@ -48,7 +48,7 @@ def addAlert(instrument, msg):
 
 
 def checkTicker(ticker):
-    logger.info('CHECK TICKER')
+    logger.info('CHECK TICKER ' + ticker)
     if 'USD' not in ticker:
         addAlert(ticker, 'USD not found in ticker')
         return False
@@ -59,7 +59,7 @@ def checkTicker(ticker):
         addAlert(ticker, 'Asset not found on Kraken futures')
         return False
 
-    return instrument
+    return instrument.upper()
 
 @app.route("/webhook", methods=['POST'])
 def tradingview_webhook():
@@ -69,7 +69,7 @@ def tradingview_webhook():
     try:
         data = json.loads(request.data)
     except Exception as e:
-        logger.alert('DATA LOAD EXCEPTION ' + str(e))
+        logger.warning('DATA LOAD EXCEPTION ' + str(e))
         addAlert('tradingview', 'Invalid json data')
         return 'ERROR'
     logger.info('TV DATA' +  json.dumps(data))
@@ -86,7 +86,7 @@ def tradingview_webhook():
             logger.info('CODE SUCCESS')
 
     except Exception as e:
-        logger.alert('TV CODE EXCEPTION ' + str(e))
+        logger.warning('TV CODE EXCEPTION ' + str(e))
 
     TICKER = data['TICKER']
     TIME = data['TIME']
@@ -164,7 +164,7 @@ def tradingview_webhook():
             r.set('assets', json.dumps(assets))
 
     except Exception as e:
-        logger.alert('EXCEPTION ON TRADE RESULT ' + str(e))
+        logger.warning('EXCEPTION ON TRADE RESULT ' + str(e))
 
     endWebhook = 'TRADING VIEW WEBHOOK COMPLETE: ' + instrument
     logger.info(endWebhook)

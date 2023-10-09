@@ -67,7 +67,7 @@ def getInstruments(asset):
                 return i['symbol']
             if asset == 'BTC':
                 loggerAPI.info('found pf_xbtusd')
-                return 'pf_xbtusd'
+                return 'PF_XBTUSD'
     else:
         loggerAPI.info('getInstruments Error: ' + asset + ':\n' + result)
 
@@ -78,13 +78,14 @@ def getTicker(instrument):
     result = cfPublic.get_tickers()
     res = json.loads(result)
 
-    loggerAPI.info("get_tickers:\n" + str(res.keys()))
+    loggerAPI.info("get_tickers: " + str(res.keys()))
     #  dict_keys(['result', 'tickers', 'serverTime']) # tickers is list
     if res['result'] and res['result'] != 'success':
         loggerAPI.info('getTickers Error: ' + res['result'])
 
     for t in res['tickers']:
-        if t['symbol'] == instrument:
+        #print(t)
+        if t['symbol'] == instrument.upper():
             loggerAPI.debug ('getTicker: \n' +  t['symbol'] + ':\n ' + str(t))
             return t['markPrice']
 
@@ -290,4 +291,3 @@ def openPosition(instrument, STOP, PROP, LEV, SIDE):
     now = datetime.now()
     date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
     return {'TIME': date_time, 'status': 'START NEW POSITION', 'side': SIDE, 'instrument': instrument, 'STOPID': STOPID, 'OPENID': OPENID }
-
