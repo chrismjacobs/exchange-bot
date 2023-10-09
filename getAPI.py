@@ -43,7 +43,7 @@ def getFunds():
     if res['result'] and res['result'] != 'success':
         loggerAPI.warning('getFunds Error: ' + res['result'])
 
-    loggerAPI.info("get_accounts:\n" + str(res['accounts'].keys()))
+    # loggerAPI.info("get_accounts:\n" + str(res['accounts'].keys()))
     # dict_keys(['result', 'accounts', 'serverTime'])
 
     for fund in res['accounts']['flex']:
@@ -113,7 +113,7 @@ def tradeStatus(instrument):
 def getAllocation(instrument, PROP, LEV, OPENSIZE):
 
     [marginEquity, collateralBasic, availableMargin] = getFunds()
-    loggerAPI.info(marginEquity, collateralBasic, availableMargin)
+    #loggerAPI.info(marginEquity, collateralBasic, availableMargin)
     usdCollateral = round(collateralBasic * 0.95 * int(PROP)/100)
     markPrice = getTicker(instrument)
 
