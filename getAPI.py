@@ -78,14 +78,14 @@ def getTicker(instrument):
     result = cfPublic.get_tickers()
     res = json.loads(result)
 
-    loggerAPI.info("get_tickers: " + str(res.keys()))
+    loggerAPI.info("get_tickers: " + instrument + ' ' + str(res.keys()))
     #  dict_keys(['result', 'tickers', 'serverTime']) # tickers is list
     if res['result'] and res['result'] != 'success':
         loggerAPI.info('getTickers Error: ' + res['result'])
 
     for t in res['tickers']:
-        #print(t)
-        if t['symbol'] == instrument.upper():
+        loggerAPI.warning('TICKERS ' + t['symbol'] + str(t['symbol'] == instrument))
+        if t['symbol'] == instrument:
             loggerAPI.debug ('getTicker: \n' +  t['symbol'] + ':\n ' + str(t))
             return t['markPrice']
 
