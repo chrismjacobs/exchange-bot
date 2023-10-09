@@ -126,7 +126,7 @@ def getAllocation(instrument, PROP, LEV, OPENSIZE):
     elif markPrice > 100:
         r = 2
     else:
-        r = 0
+        r = 1
 
     assetAmount = usdCollateral/markPrice * int(LEV)
     loggerAPI.warning('FUND CACULATION ' + str(usdCollateral) + ' ' + str(assetAmount))
