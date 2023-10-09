@@ -69,7 +69,7 @@ def tradingview_webhook():
     try:
         data = json.loads(request.data)
     except Exception as e:
-        logger.info('DATA LOAD EXCEPTION')
+        logger.alert('DATA LOAD EXCEPTION ' + str(e))
         addAlert('tradingview', 'Invalid json data')
         return 'ERROR'
     logger.info('TV DATA' +  json.dumps(data))
@@ -86,7 +86,7 @@ def tradingview_webhook():
             logger.info('CODE SUCCESS')
 
     except Exception as e:
-        logger.info ('EXCEPTION ' + str(e))
+        logger.alert('TV CODE EXCEPTION ' + str(e))
 
     TICKER = data['TICKER']
     TIME = data['TIME']
@@ -164,7 +164,7 @@ def tradingview_webhook():
             r.set('assets', json.dumps(assets))
 
     except Exception as e:
-        logger.info('EXCEPTION ON TRADE RESULT')
+        logger.alert('EXCEPTION ON TRADE RESULT ' + str(e))
 
     endWebhook = 'TRADING VIEW WEBHOOK COMPLETE: ' + instrument
     logger.info(endWebhook)
