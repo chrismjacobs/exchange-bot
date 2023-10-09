@@ -112,7 +112,7 @@ def tradeStatus(instrument):
 def getAllocation(instrument, PROP, LEV, OPENSIZE):
 
     [marginEquity, collateralBasic, availableMargin] = getFunds()
-    #logger.info(marginEquity, collateralBasic, availableMargin)
+    logger.info(marginEquity, collateralBasic, availableMargin)
     usdCollateral = round(collateralBasic * 0.95 * int(PROP)/100)
     markPrice = getTicker(instrument)
 

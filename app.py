@@ -141,6 +141,7 @@ def tradingview_webhook():
     LEV = assets[instrument]['lev']
     STOPID = assets[instrument]['laststop']
     tradeResult = tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID)
+    print('TRADE RESULT ', type(tradeResult))
     if tradeResult:
         logger.info('TRADE RESULT ' + json.dumps(tradeResult))
     else:
