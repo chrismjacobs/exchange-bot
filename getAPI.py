@@ -99,7 +99,7 @@ def tradeStatus(instrument):
         loggerAPI.warning('tradeStatus Error: ' + res['result'])
 
     for p in res['openPositions']:
-        if p['symbol'] == instrument:
+        if p['symbol'] == instrument.lower():
             loggerAPI.info('tradeStatus found:\n ' + instrument + ' ' + p['side'] + '\n' + str(p))
             maxLev = 0
             if 'maxFixedLeverage' in p:
@@ -251,21 +251,13 @@ def openPosition(instrument, STOP, PROP, LEV, SIDE):
 
     openOrder = {
         "orderType": "mkt",
-        "symbol": instrument,
+        "symbol": instrument.lower(),
         "side": SIDE,
         "size": SIZE
     }
     print('OPEN ORDER', instrument, openOrder)
-    try:
-        openResult = cfPrivate.send_order_1(openOrder)
-    except:
-        openOrder = {
-            "orderType": "mkt",
-            "symbol": instrument.lower(),
-            "side": SIDE,
-            "size": SIZE
-        }
-        openResult = cfPrivate.send_order_1(openOrder)
+    openResult = cfPrivate.send_order_1(openOrder)
+
 
     openRes = json.loads(openResult)
     print('OPEN RES 1', openRes)
