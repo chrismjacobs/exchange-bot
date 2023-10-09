@@ -5,11 +5,11 @@ from datetime import datetime
 from settings import API_KEY_KRAKEN, API_SEC_KRAKEN, APIPATH
 import logging
 
-logger = logging.getLogger("exchange api")
+loggerAPI = logging.getLogger(__name__)
 handler = logging.StreamHandler()
-logger.addHandler(handler)
-logger.setLevel(logging.DEBUG)
-logger.debug('Test Logger API')
+loggerAPI.addHandler(handler)
+loggerAPI.setLevel(logging.DEBUG)
+loggerAPI.debug('Test Logger API')
 
 
 
@@ -41,13 +41,13 @@ def getFunds():
     result = cfPrivate.get_accounts()
     res = json.loads(result)
     if res['result'] and res['result'] != 'success':
-        logger.warning('getFunds Error: ' + res['result'])
+        loggerAPI.warning('getFunds Error: ' + res['result'])
 
-    logger.info("get_accounts:\n" + str(res['accounts'].keys()))
+    loggerAPI.info("get_accounts:\n" + str(res['accounts'].keys()))
     # dict_keys(['result', 'accounts', 'serverTime'])
 
     for fund in res['accounts']['flex']:
-        logger.debug(fund + ': ' + str(res['accounts']['flex'][fund]))
+        loggerAPI.debug(fund + ': ' + str(res['accounts']['flex'][fund]))
     marginEquity = res['accounts']['flex']['marginEquity']
     collateralBasic = res['accounts']['flex']['marginEquity'] - res['accounts']['flex']['totalUnrealized']
     availableMargin = res['accounts']['flex']['availableMargin']
@@ -56,20 +56,20 @@ def getFunds():
 
 def getInstruments(asset):
     result = cfPublic.get_instruments()
-    #logger.info("get_instruments:\n", result)
-    logger.info('getInstruments: ' + asset)
+    #loggerAPI.info("get_instruments:\n", result)
+    loggerAPI.info('getInstruments: ' + asset)
     resultDict = json.loads(result)
     if 'instruments' in resultDict:
         for i in resultDict['instruments']:
-            # logger.info(i['symbol'])
+            # loggerAPI.info(i['symbol'])
             if asset.lower() in i['symbol'] and 'pf' in i['symbol']:
-                logger.info('getInstruments: Asset Found ' + i['symbol'])
+                loggerAPI.info('getInstruments: Asset Found ' + i['symbol'])
                 return i['symbol']
             if asset == 'BTC':
-                logger.info('found pf_xbtusd')
+                loggerAPI.info('found pf_xbtusd')
                 return 'pf_xbtusd'
     else:
-        logger.info('getInstruments Error: ' + asset + ':\n' + result)
+        loggerAPI.info('getInstruments Error: ' + asset + ':\n' + result)
 
     return None
 
@@ -78,41 +78,41 @@ def getTicker(instrument):
     result = cfPublic.get_tickers()
     res = json.loads(result)
 
-    logger.info("get_tickers:\n" + str(res.keys()))
+    loggerAPI.info("get_tickers:\n" + str(res.keys()))
     #  dict_keys(['result', 'tickers', 'serverTime']) # tickers is list
     if res['result'] and res['result'] != 'success':
-        logger.info('getTickers Error: ' + res['result'])
+        loggerAPI.info('getTickers Error: ' + res['result'])
 
     for t in res['tickers']:
         if t['symbol'] == instrument:
-            logger.debug ('getTicker: \n' +  t['symbol'] + ':\n ' + str(t))
+            loggerAPI.debug ('getTicker: \n' +  t['symbol'] + ':\n ' + str(t))
             return t['markPrice']
 
 
 def tradeStatus(instrument):
-    logger.info('tradeStatus ' + instrument)
+    loggerAPI.info('tradeStatus ' + instrument)
     result = cfPrivate.get_openpositions()
     res = json.loads(result)
     if res['result'] and res['result'] != 'success':
-        logger.warning('tradeStatus Error: ' + res['result'])
+        loggerAPI.warning('tradeStatus Error: ' + res['result'])
 
     for p in res['openPositions']:
         if p['symbol'] == instrument:
-            logger.info('tradeStatus found:\n ' + instrument + ' ' + p['side'] + '\n' + str(p))
+            loggerAPI.info('tradeStatus found:\n ' + instrument + ' ' + p['side'] + '\n' + str(p))
             maxLev = 0
             if 'maxFixedLeverage' in p:
                 maxLev = p['maxFixedLeverage']
 
             return [p['side'], maxLev]
 
-    logger.warning('tradeStatus: No Postion Found')
+    loggerAPI.warning('tradeStatus: No Postion Found')
     ## no tradeStatus found
     return [None, None]
 
 def getAllocation(instrument, PROP, LEV, OPENSIZE):
 
     [marginEquity, collateralBasic, availableMargin] = getFunds()
-    logger.info(marginEquity, collateralBasic, availableMargin)
+    loggerAPI.info(marginEquity, collateralBasic, availableMargin)
     usdCollateral = round(collateralBasic * 0.95 * int(PROP)/100)
     markPrice = getTicker(instrument)
 
@@ -127,10 +127,10 @@ def getAllocation(instrument, PROP, LEV, OPENSIZE):
 
     assetAmount = usdCollateral/markPrice * int(LEV)
     try:
-        logger.info('Funds:  Margin ' + str(marginEquity) +  ' ColBasic ' + str(collateralBasic) +  ' availableMargin ' + str(availableMargin))
+        loggerAPI.info('Funds:  Margin ' + str(marginEquity) +  ' ColBasic ' + str(collateralBasic) +  ' availableMargin ' + str(availableMargin))
     except:
         print('logger fail')
-    logger.info('Allocating for ' + instrument + ':\nCollateral $' + str(collateralBasic) +  ':\nCollateral% ' + str(usdCollateral) + '\nAmount of asset on leverage: ' + str(round(assetAmount, r)))
+    loggerAPI.info('Allocating for ' + instrument + ':\nCollateral $' + str(collateralBasic) +  ':\nCollateral% ' + str(usdCollateral) + '\nAmount of asset on leverage: ' + str(round(assetAmount, r)))
 
     return round(assetAmount, r)
 
@@ -145,7 +145,7 @@ def getStopPrice(instrument, STOP, SIDE):
         STOPPRICE = markPrice + int(STOP)
 
         ## get mark price
-    logger.info('getStopPrice: ' + str(STOPPRICE))
+    loggerAPI.info('getStopPrice: ' + str(STOPPRICE))
     return STOPPRICE
 
 def closeOpen(instrument, STOP, PROP, LEV, STOPCANCEL):
@@ -153,7 +153,7 @@ def closeOpen(instrument, STOP, PROP, LEV, STOPCANCEL):
     res = json.loads(result)
     for p in res['openPositions']:
         if p['symbol'] == instrument:
-            logger.info('tradeStatus found:\n ' + instrument + ' ' + p['side'] + '\n' + str(p))
+            loggerAPI.info('tradeStatus found:\n ' + instrument + ' ' + p['side'] + '\n' + str(p))
 
             CLOSESIZE = p['size']
 
@@ -178,16 +178,16 @@ def closeOpen(instrument, STOP, PROP, LEV, STOPCANCEL):
             }
             closeResult = cfPrivate.send_order_1(closeOrder)
             closeRes = json.loads(closeResult)
-            logger.info(closeResult)
+            loggerAPI.info(closeResult)
             if len(closeRes['sendStatus']) < 2:
                 #{'result': 'success', 'sendStatus': {'status': 'invalidSize'}, 'serverTime': '2023-09-19T07:01:43.680Z'}
-                logger.warning('closeOrder Error: ' + str(closeRes['sendStatus']))
+                loggerAPI.warning('closeOrder Error: ' + str(closeRes['sendStatus']))
                 return {'error': closeResult, 'instrument': instrument}
-            logger.info('CLOSE POSITION:\n' + closeResult)
+            loggerAPI.info('CLOSE POSITION:\n' + closeResult)
 
             ### Close last stop order
             result = cfPrivate.cancel_order(STOPCANCEL)
-            logger.info("cancel_order:\n" + str(result))
+            loggerAPI.info("cancel_order:\n" + str(result))
 
             SIZE = getAllocation(instrument, PROP, LEV, p['size'])
 
@@ -201,9 +201,9 @@ def closeOpen(instrument, STOP, PROP, LEV, STOPCANCEL):
             openRes = json.loads(openResult)
             if len(openRes['sendStatus']) < 2:
                 #{'result': 'success', 'sendStatus': {'status': 'invalidSize'}, 'serverTime': '2023-09-19T07:01:43.680Z'}
-                logger.warning('openOrder Error: ' + str(openRes['sendStatus']))
+                loggerAPI.warning('openOrder Error: ' + str(openRes['sendStatus']))
                 return {'error': openResult, 'instrument': instrument}
-            logger.info('OPEN POSITION:\n' + openResult)
+            loggerAPI.info('OPEN POSITION:\n' + openResult)
 
             OPENID = openRes['sendStatus']['order_id']
 
@@ -226,9 +226,9 @@ def closeOpen(instrument, STOP, PROP, LEV, STOPCANCEL):
             stopRes = json.loads(stopResult)
             if len(stopRes['sendStatus']) < 2:
                 #{'result': 'success', 'sendStatus': {'status': 'invalidSize'}, 'serverTime': '2023-09-19T07:01:43.680Z'}
-                logger.warning('stopOrder Error: ' + str(stopRes['sendStatus']))
+                loggerAPI.warning('stopOrder Error: ' + str(stopRes['sendStatus']))
                 return {'error': stopResult, 'instrument': instrument}
-            logger.info('STOP POSITION:\n' + stopResult)
+            loggerAPI.info('STOP POSITION:\n' + stopResult)
 
             STOPID = stopRes['sendStatus']['order_id']
             now = datetime.now()
@@ -256,9 +256,9 @@ def openPosition(instrument, STOP, PROP, LEV, SIDE):
     print('OPEN RES 1', openRes)
     if len(openRes['sendStatus']) < 2:
         #{'result': 'success', 'sendStatus': {'status': 'invalidSize'}, 'serverTime': '2023-09-19T07:01:43.680Z'}
-        logger.info('openNewOrder Error: ' + str(openRes['sendStatus']))
+        loggerAPI.info('openNewOrder Error: ' + str(openRes['sendStatus']))
         return {'error': openResult, 'instrument': instrument}
-    logger.info('OPEN NEW POSITION:\n' + openResult)
+    loggerAPI.info('OPEN NEW POSITION:\n' + openResult)
 
     OPENID = openRes['sendStatus']['order_id']
 
@@ -280,12 +280,12 @@ def openPosition(instrument, STOP, PROP, LEV, SIDE):
     print('STOP RES 1', openRes)
     if len(stopRes['sendStatus']) < 2:
         #{'result': 'success', 'sendStatus': {'status': 'invalidSize'}, 'serverTime': '2023-09-19T07:01:43.680Z'}
-        logger.warning('stopNewOrder Error: ' + str(stopRes['sendStatus']))
+        loggerAPI.warning('stopNewOrder Error: ' + str(stopRes['sendStatus']))
         return {'error': stopResult, 'instrument': instrument}
-    logger.info('STOP NEW POSITION:\n' + stopResult)
+    loggerAPI.info('STOP NEW POSITION:\n' + stopResult)
 
     STOPID = stopRes['sendStatus']['order_id']
-    logger.info('STOP NEW ORDER ' + STOPID)
+    loggerAPI.info('STOP NEW ORDER ' + STOPID)
 
     now = datetime.now()
     date_time = now.strftime("%m/%d/%Y, %H:%M:%S")

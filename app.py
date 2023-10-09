@@ -13,7 +13,7 @@ app.config['SECRET_KEY'] = SECRET_KEY
 app.config['DEBUG'] = DEBUG
 
 
-logger = logging.getLogger("exchange bot")
+logger = logging.getLogger(__name__)
 handler = logging.StreamHandler()
 logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
