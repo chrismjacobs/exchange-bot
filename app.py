@@ -156,7 +156,7 @@ def tradingview_webhook():
     else:
         logger.warning('TRADE RESULT FALSE')
     try:
-        if tradeResult != False:
+        if tradeResult != False and tradeResult != None:
             assets = json.loads(r.get('assets'))
             assets[instrument]['trades'].insert(0, tradeResult)
             if len(assets[instrument]['trades']) > 300:

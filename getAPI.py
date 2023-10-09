@@ -115,19 +115,21 @@ def getAllocation(instrument, PROP, LEV, OPENSIZE):
 
     [marginEquity, collateralBasic, availableMargin] = getFunds()
     #loggerAPI.info(marginEquity, collateralBasic, availableMargin)
+    collateralBasic = 8
     usdCollateral = round(collateralBasic * 0.95 * int(PROP)/100)
     markPrice = getTicker(instrument)
 
     r = 3
 
     if markPrice > 1000:
-        r = 2
+        r = 3
     elif markPrice > 100:
-        r = 1
+        r = 2
     else:
         r = 0
 
     assetAmount = usdCollateral/markPrice * int(LEV)
+    loggerAPI.warning('FUND CACULATION ' + str(usdCollateral) + ' ' + str(assetAmount))
     try:
         loggerAPI.info('Funds:  Margin ' + str(marginEquity) +  ' ColBasic ' + str(collateralBasic) +  ' availableMargin ' + str(availableMargin))
     except:
@@ -303,3 +305,4 @@ def openPosition(instrument, STOP, PROP, LEV, SIDE):
     now = datetime.now()
     date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
     return {'TIME': date_time, 'status': 'START NEW POSITION', 'side': SIDE, 'instrument': instrument, 'STOPID': STOPID, 'OPENID': OPENID }
+
