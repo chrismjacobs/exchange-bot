@@ -115,7 +115,6 @@ def getAllocation(instrument, PROP, LEV, OPENSIZE):
 
     [marginEquity, collateralBasic, availableMargin] = getFunds()
     #loggerAPI.info(marginEquity, collateralBasic, availableMargin)
-    collateralBasic = 8
     usdCollateral = round(collateralBasic * 0.95 * int(PROP)/100)
     markPrice = getTicker(instrument)
 
