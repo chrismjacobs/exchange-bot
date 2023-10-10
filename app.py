@@ -146,7 +146,7 @@ def tradingview_webhook():
     tradeResult = None
     try:
         tradeResult = tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID)
-        print('TRADE RESULT ', type(tradeResult))
+        #type(tradeResult) = dict
     except Exception as e:
         logger.warning('TRADE RESULT ERROR 2 ' + str(e) )
         #print('TRADE RESULT ERROR 2', e)
