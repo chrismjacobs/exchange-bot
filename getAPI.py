@@ -87,7 +87,7 @@ def getTicker(instrument):
         ## loggerAPI.warning('TICKERS ' + t['symbol'] + str(t['symbol'] == instrument))
         if t['symbol'].upper() == instrument.upper():
             ### symbols appear as lowercase
-            loggerAPI.debug ('getTicker' +  t['symbol'] + ':\n ' + str(t))
+            loggerAPI.debug ('getTicker ' +  t['symbol'] + ':\n ' + str(t))
             return t['markPrice']
 
 
@@ -100,16 +100,16 @@ def tradeStatus(instrument):
 
     for p in res['openPositions']:
         if p['symbol'] == instrument.lower():
-            loggerAPI.info('tradeStatus found:\n ' + instrument + ' ' + p['side'] + '\n' + str(p))
+            loggerAPI.info('tradeStatus found: ' + instrument + ' ' + p['side'] + '\n' + str(p))
             maxLev = 0
             if 'maxFixedLeverage' in p:
                 maxLev = p['maxFixedLeverage']
 
-            return [p['side'], maxLev]
+            return [p['side'], maxLev, p['size']]
 
     loggerAPI.warning('tradeStatus: No Postion Found')
     ## no tradeStatus found
-    return [None, None]
+    return [None, None, None]
 
 def getAllocation(instrument, PROP, LEV, OPENSIZE):
 
@@ -152,149 +152,153 @@ def getStopPrice(instrument, STOP, SIDE):
     loggerAPI.info('getStopPrice: ' + str(STOPPRICE))
     return STOPPRICE
 
-def closeOpen(instrument, STOP, PROP, LEV, STOPCANCEL):
-    result = cfPrivate.get_openpositions()
-    res = json.loads(result)
-    for p in res['openPositions']:
-        if p['symbol'] == instrument:
-            loggerAPI.info('tradeStatus found:\n ' + instrument + ' ' + p['side'] + '\n' + str(p))
+def closeOpen(instrument, STOP, PROP, LEV, STOPCANCEL, TSsize, TS):
+    loggerAPI.info('closeOpen init data: ' + instrument + ' ' + TS + ' ' + str(TSsize))
+    try:
+        CLOSESIZE = TSsize
 
-            CLOSESIZE = p['size']
+        SIDE = None
+        CLOSESIDE = None
+        STOPSIDE = None
 
-            SIDE = None
-            CLOSESIDE = None
-            STOPSIDE = None
+        if TS == 'long':
+            SIDE = 'sell'
+            STOPSIDE = 'buy'
+            CLOSESIDE = 'sell'
+        elif TS == 'short':
+            SIDE = 'buy'
+            STOPSIDE = 'sell'
+            CLOSESIDE = 'buy'
 
-            if p['side'] == 'long':
-                SIDE = 'sell'
-                STOPSIDE = 'buy'
-                CLOSESIDE = 'sell'
-            elif p['side'] == 'short':
-                SIDE = 'buy'
-                STOPSIDE = 'sell'
-                CLOSESIDE = 'buy'
+        closeOrder = {
+            "orderType": "mkt",
+            "symbol": instrument,
+            "side": CLOSESIDE,
+            "size": CLOSESIZE
+        }
+        closeResult = cfPrivate.send_order_1(closeOrder)
+        closeRes = json.loads(closeResult)
+        loggerAPI.info(closeResult)
+        if len(closeRes['sendStatus']) < 2:
+            #{'result': 'success', 'sendStatus': {'status': 'invalidSize'}, 'serverTime': '2023-09-19T07:01:43.680Z'}
+            loggerAPI.warning('closeOrder Error: ' + str(closeRes['sendStatus']))
+            return {'error': closeResult, 'instrument': instrument}
+        loggerAPI.info('CLOSE POSITION:\n' + closeResult)
 
-            closeOrder = {
-                "orderType": "mkt",
-                "symbol": instrument,
-                "side": CLOSESIDE,
-                "size": CLOSESIZE
-            }
-            closeResult = cfPrivate.send_order_1(closeOrder)
-            closeRes = json.loads(closeResult)
-            loggerAPI.info(closeResult)
-            if len(closeRes['sendStatus']) < 2:
-                #{'result': 'success', 'sendStatus': {'status': 'invalidSize'}, 'serverTime': '2023-09-19T07:01:43.680Z'}
-                loggerAPI.warning('closeOrder Error: ' + str(closeRes['sendStatus']))
-                return {'error': closeResult, 'instrument': instrument}
-            loggerAPI.info('CLOSE POSITION:\n' + closeResult)
+        ### Close last stop order
+        result = cfPrivate.cancel_order(STOPCANCEL)
+        loggerAPI.info("cancel_order:\n" + str(result))
 
-            ### Close last stop order
-            result = cfPrivate.cancel_order(STOPCANCEL)
-            loggerAPI.info("cancel_order:\n" + str(result))
+        SIZE = getAllocation(instrument, PROP, LEV, TSsize) # size not really necessary as new prop and lev would mean new size calculated
 
-            SIZE = getAllocation(instrument, PROP, LEV, p['size'])
+        openOrder = {
+            "orderType": "mkt",
+            "symbol": instrument,
+            "side": SIDE,
+            "size": SIZE
+        }
+        openResult = cfPrivate.send_order_1(openOrder)
+        openRes = json.loads(openResult)
+        if len(openRes['sendStatus']) < 2:
+            #{'result': 'success', 'sendStatus': {'status': 'invalidSize'}, 'serverTime': '2023-09-19T07:01:43.680Z'}
+            loggerAPI.warning('openOrder Error: ' + str(openRes['sendStatus']))
+            return {'error': openResult, 'instrument': instrument}
+        loggerAPI.info('OPEN POSITION:\n' + openResult)
 
-            openOrder = {
-                "orderType": "mkt",
-                "symbol": instrument,
-                "side": SIDE,
-                "size": SIZE
-            }
-            openResult = cfPrivate.send_order_1(openOrder)
-            openRes = json.loads(openResult)
-            if len(openRes['sendStatus']) < 2:
-                #{'result': 'success', 'sendStatus': {'status': 'invalidSize'}, 'serverTime': '2023-09-19T07:01:43.680Z'}
-                loggerAPI.warning('openOrder Error: ' + str(openRes['sendStatus']))
-                return {'error': openResult, 'instrument': instrument}
-            loggerAPI.info('OPEN POSITION:\n' + openResult)
+        OPENID = openRes['sendStatus']['order_id']
 
-            OPENID = openRes['sendStatus']['order_id']
+        STOPPRICE = getStopPrice(instrument, STOP, SIDE)
+        CLIENTID = instrument + '_' + str(STOPPRICE)
 
-            STOPPRICE = getStopPrice(instrument, STOP, SIDE)
-            CLIENTID = instrument + '_' + str(STOPPRICE)
+        stopOrder = {
+            "orderType": "stp",
+            "symbol": instrument,
+            "side": STOPSIDE,
+            "size": SIZE,
+            "stopPrice" : STOPPRICE,
+            "triggerSignal": "mark_price",
+            "cliOrdId": CLIENTID,
+            "reduceOnly": "true",
+            "triggerSignal" : "mark"
+        }
 
-            stopOrder = {
-                "orderType": "stp",
-                "symbol": instrument,
-                "side": STOPSIDE,
-                "size": SIZE,
-                "stopPrice" : STOPPRICE,
-                "triggerSignal": "mark_price",
-                "cliOrdId": CLIENTID,
-                "reduceOnly": "true",
-                "triggerSignal" : "mark"
-            }
+        stopResult = cfPrivate.send_order_1(stopOrder)
+        stopRes = json.loads(stopResult)
+        if len(stopRes['sendStatus']) < 2:
+            #{'result': 'success', 'sendStatus': {'status': 'invalidSize'}, 'serverTime': '2023-09-19T07:01:43.680Z'}
+            loggerAPI.warning('stopOrder Error: ' + str(stopRes['sendStatus']))
+            return {'error': stopResult, 'instrument': instrument}
+        loggerAPI.info('STOP POSITION:\n' + stopResult)
 
-            stopResult = cfPrivate.send_order_1(stopOrder)
-            stopRes = json.loads(stopResult)
-            if len(stopRes['sendStatus']) < 2:
-                #{'result': 'success', 'sendStatus': {'status': 'invalidSize'}, 'serverTime': '2023-09-19T07:01:43.680Z'}
-                loggerAPI.warning('stopOrder Error: ' + str(stopRes['sendStatus']))
-                return {'error': stopResult, 'instrument': instrument}
-            loggerAPI.info('STOP POSITION:\n' + stopResult)
+        STOPID = stopRes['sendStatus']['order_id']
+        now = datetime.now()
+        date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
+        return {'TIME': date_time, 'status': 'CLOSE/OPEN ', 'side': SIDE, 'instrument': instrument, 'STOPID': STOPID, 'OPENID': OPENID }
+    except Exception as e:
+        loggerAPI.warning('CLOSE OPEN EXCEPTION:  ' + str(e))
 
-            STOPID = stopRes['sendStatus']['order_id']
-            now = datetime.now()
-            date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
-            return {'TIME': date_time, 'status': 'CLOSE/OPEN ', 'side': SIDE, 'instrument': instrument, 'STOPID': STOPID, 'OPENID': OPENID }
 
 
 def openPosition(instrument, STOP, PROP, LEV, SIDE):
-    SIZE = getAllocation(instrument, PROP, LEV, None)
+    loggerAPI.info('Open init data: ' + instrument + ' ' + SIDE + ' ' + str(PROP) + '% ' + str(LEV) + 'x')
+    try:
+        SIZE = getAllocation(instrument, PROP, LEV, None)
 
-    STOPSIDE = 'sell'
+        STOPSIDE = 'sell'
 
-    if SIDE == 'sell':
-        STOPSIDE = 'buy'
-
-
-    openOrder = {
-        "orderType": "mkt",
-        "symbol": instrument.lower(),
-        "side": SIDE,
-        "size": SIZE
-    }
-    print('OPEN ORDER', instrument, openOrder)
-    openResult = cfPrivate.send_order_1(openOrder)
+        if SIDE == 'sell':
+            STOPSIDE = 'buy'
 
 
-    openRes = json.loads(openResult)
-    print('OPEN RES 1', openRes)
-    if len(openRes['sendStatus']) < 2:
-        #{'result': 'success', 'sendStatus': {'status': 'invalidSize'}, 'serverTime': '2023-09-19T07:01:43.680Z'}
-        loggerAPI.info('openNewOrder Error: ' + str(openRes['sendStatus']))
-        return {'error': openResult, 'instrument': instrument}
-    loggerAPI.info('OPEN NEW POSITION:\n' + openResult)
+        openOrder = {
+            "orderType": "mkt",
+            "symbol": instrument.lower(),
+            "side": SIDE,
+            "size": SIZE
+        }
+        print('OPEN ORDER', instrument, openOrder)
+        openResult = cfPrivate.send_order_1(openOrder)
 
-    OPENID = openRes['sendStatus']['order_id']
 
-    STOPPRICE = getStopPrice(instrument, STOP, SIDE)
-    CLIENTID = instrument + '_' + str(STOPPRICE)
-    stopOrder = {
-        "orderType": "stp",
-        "symbol": instrument,
-        "side": STOPSIDE,
-        "size": SIZE,
-        "stopPrice" : STOPPRICE,
-        "cliOrdId": CLIENTID,
-        "reduceOnly": "true",
-        "triggerSignal" : "mark"
-    }
+        openRes = json.loads(openResult)
+        print('OPEN RES 1', openRes)
+        if len(openRes['sendStatus']) < 2:
+            #{'result': 'success', 'sendStatus': {'status': 'invalidSize'}, 'serverTime': '2023-09-19T07:01:43.680Z'}
+            loggerAPI.info('openNewOrder Error: ' + str(openRes['sendStatus']))
+            return {'error': openResult, 'instrument': instrument}
+        loggerAPI.info('OPEN NEW POSITION:\n' + openResult)
 
-    stopResult = cfPrivate.send_order_1(stopOrder)
-    stopRes = json.loads(stopResult)
-    print('STOP RES 1', openRes)
-    if len(stopRes['sendStatus']) < 2:
-        #{'result': 'success', 'sendStatus': {'status': 'invalidSize'}, 'serverTime': '2023-09-19T07:01:43.680Z'}
-        loggerAPI.warning('stopNewOrder Error: ' + str(stopRes['sendStatus']))
-        return {'error': stopResult, 'instrument': instrument}
-    loggerAPI.info('STOP NEW POSITION:\n' + stopResult)
+        OPENID = openRes['sendStatus']['order_id']
 
-    STOPID = stopRes['sendStatus']['order_id']
-    loggerAPI.info('STOP NEW ORDER ' + STOPID)
+        STOPPRICE = getStopPrice(instrument, STOP, SIDE)
+        CLIENTID = instrument + '_' + str(STOPPRICE)
+        stopOrder = {
+            "orderType": "stp",
+            "symbol": instrument,
+            "side": STOPSIDE,
+            "size": SIZE,
+            "stopPrice" : STOPPRICE,
+            "cliOrdId": CLIENTID,
+            "reduceOnly": "true",
+            "triggerSignal" : "mark"
+        }
 
-    now = datetime.now()
-    date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
-    return {'TIME': date_time, 'status': 'START NEW POSITION', 'side': SIDE, 'instrument': instrument, 'STOPID': STOPID, 'OPENID': OPENID }
+        stopResult = cfPrivate.send_order_1(stopOrder)
+        stopRes = json.loads(stopResult)
+        print('STOP RES 1', openRes)
+        if len(stopRes['sendStatus']) < 2:
+            #{'result': 'success', 'sendStatus': {'status': 'invalidSize'}, 'serverTime': '2023-09-19T07:01:43.680Z'}
+            loggerAPI.warning('stopNewOrder Error: ' + str(stopRes['sendStatus']))
+            return {'error': stopResult, 'instrument': instrument}
+        loggerAPI.info('STOP NEW POSITION:\n' + stopResult)
+
+        STOPID = stopRes['sendStatus']['order_id']
+        loggerAPI.info('STOP NEW ORDER ' + STOPID)
+
+        now = datetime.now()
+        date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
+        return {'TIME': date_time, 'status': 'START NEW POSITION', 'side': SIDE, 'instrument': instrument, 'STOPID': STOPID, 'OPENID': OPENID }
+
+    except Exception as e:
+        loggerAPI.warning('OPEN POSITION EXCEPTION:  ' + str(e))
 

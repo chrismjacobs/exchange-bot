@@ -177,6 +177,7 @@ def tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID):
 
     TSlist = tradeStatus(instrument)
     TS = TSlist[0]
+    TSsize = TSlist[2]
     if TS == 'long' and SIDE == 'buy':
         logger.info('NO ACTION ' + instrument)
         return False
@@ -186,14 +187,14 @@ def tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID):
         return False
 
     elif TS == 'long' and SIDE == 'sell':
-        tradeData = closeOpen(instrument, STOP, PROP, LEV, STOPID)
+        tradeData = closeOpen(instrument, STOP, PROP, LEV, STOPID, TSsize)
         if 'error' in tradeData:
             addAlert(instrument, json.dumps(tradeData))
             return False
         return tradeData
 
     elif TS == 'short' and SIDE == 'buy':
-        tradeData = closeOpen(instrument, STOP, PROP, LEV, STOPID)
+        tradeData = closeOpen(instrument, STOP, PROP, LEV, STOPID, TSsize, TS)
         if 'error' in tradeData:
             addAlert(instrument, json.dumps(tradeData))
             return False
@@ -251,6 +252,7 @@ def getAssets():
         logger.info('TSList ' + str(TSlist))
         assets[a]['position'] = TSlist[0]
         assets[a]['lastlev'] = TSlist[1]
+        assets[a]['lastsize'] = TSlist[2]
         assets[a]['errors'] = errors[a]
 
     return json.dumps(assets)
