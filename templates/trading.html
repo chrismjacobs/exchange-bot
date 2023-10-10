@@ -232,8 +232,10 @@ let vue = new Vue({
 
         if (code) {
             this.passcode = code
+            localStorage.removeItem("code")
+            this.getData()
         }
-        this.getData()
+
 
     },
     data: {
@@ -500,7 +502,7 @@ let vue = new Vue({
                 if (data.error) {
                     vue.API = 'API'
                     alert(data.error)
-                    localStorage.setItem('code', null)
+                    //localStorage.setItem('code', null)
                     return false
                 } else {
                     vue.getAssets()
@@ -545,7 +547,7 @@ let vue = new Vue({
         setAsset: function (asset) {
             // console.log('setAssets', this.parameters)
 
-            localStorage.setItem('code', this.passcode)
+
 
             params = this.parameters
 
@@ -568,6 +570,7 @@ let vue = new Vue({
                     console.log(data.error)
                     vue.editAsset = ''
                 } else {
+                    localStorage.setItem('code', vue.passcode)
                     location.reload()
                 }
 
@@ -603,6 +606,7 @@ let vue = new Vue({
                     console.log(data.error)
                     vue.editAsset = ''
                 } else {
+                    localStorage.setItem('code', vue.passcode)
                     location.reload()
                 }
             })
@@ -626,6 +630,7 @@ let vue = new Vue({
                     alert(data.error)
                     console.log(data.error)
                 } else {
+                    localStorage.setItem('code', vue.passcode)
                     location.reload()
                 }
             })

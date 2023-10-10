@@ -215,8 +215,8 @@ def tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID):
 @app.route('/getData', methods=['POST'])
 def getData():
     pw = request.form ['pw']
-    # if int(pw) != int(CODE):
-    #     return {'error' : 'authentication code input required'}
+    if int(pw) != int(CODE):
+        return {'error' : 'authentication code input required'}
 
     errors = json.loads(r.get('errors'))
 
