@@ -187,7 +187,7 @@ def tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID):
         return False
 
     elif TS == 'long' and SIDE == 'sell':
-        tradeData = closeOpen(instrument, STOP, PROP, LEV, STOPID, TSsize)
+        tradeData = closeOpen(instrument, STOP, PROP, LEV, STOPID, TSsize, TS)
         if 'error' in tradeData:
             addAlert(instrument, json.dumps(tradeData))
             return False
