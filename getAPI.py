@@ -152,7 +152,7 @@ def getStopPrice(instrument, STOP, SIDE):
     return STOPPRICE
 
 def closeOpen(instrument, STOP, PROP, LEV, STOPCANCEL, TSsize, TS):
-    loggerAPI.info('closeOpen init data: ' + instrument + ' ' + TS + ' ' + str(TSsize))
+    loggerAPI.info('closeOpen init data: ' + instrument + ' ' + TS + ' ' + str(TSsize) + ' ' + str(STOPCANCEL))
     try:
         CLOSESIZE = TSsize
 
@@ -186,7 +186,7 @@ def closeOpen(instrument, STOP, PROP, LEV, STOPCANCEL, TSsize, TS):
 
         ### Close last stop order
         result = cfPrivate.cancel_order(STOPCANCEL)
-        loggerAPI.info("cancel_order:\n" + str(result))
+        loggerAPI.info("CANCEL ORDER: " + str(result))
 
         SIZE = getAllocation(instrument, PROP, LEV, TSsize) # size not really necessary as new prop and lev would mean new size calculated
 
