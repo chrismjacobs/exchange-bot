@@ -78,7 +78,7 @@ def getTicker(instrument):
     result = cfPublic.get_tickers()
     res = json.loads(result)
 
-    loggerAPI.info("get_tickers: " + instrument + ' ' + str(res.keys()))
+    # loggerAPI.info("get_tickers: " + instrument + ' ' + str(res.keys()))
     #  dict_keys(['result', 'tickers', 'serverTime']) # tickers is list
     if res['result'] and res['result'] != 'success':
         loggerAPI.info('getTickers Error: ' + res['result'])
@@ -92,7 +92,7 @@ def getTicker(instrument):
 
 
 def tradeStatus(instrument):
-    loggerAPI.info('tradeStatus ' + instrument)
+    ## loggerAPI.info('tradeStatus ' + instrument)
     result = cfPrivate.get_openpositions()
     res = json.loads(result)
     if res['result'] and res['result'] != 'success':
@@ -113,6 +113,8 @@ def tradeStatus(instrument):
 
 def getAllocation(instrument, PROP, LEV, OPENSIZE):
 
+    adjustedLEV = LEV*0.9
+
     [marginEquity, collateralBasic, availableMargin] = getFunds()
     #loggerAPI.info(marginEquity, collateralBasic, availableMargin)
     usdCollateral = round(collateralBasic * 0.95 * int(PROP)/100)
@@ -127,7 +129,7 @@ def getAllocation(instrument, PROP, LEV, OPENSIZE):
     else:
         r = 1
 
-    assetAmount = usdCollateral/markPrice * int(LEV)
+    assetAmount = usdCollateral/markPrice * int(adjustedLEV)
     loggerAPI.warning('FUND CACULATION ' + str(usdCollateral) + ' ' + str(assetAmount))
     try:
         loggerAPI.info('Funds:  Margin ' + str(marginEquity) +  ' ColBasic ' + str(collateralBasic) +  ' availableMargin ' + str(availableMargin))
