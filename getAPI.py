@@ -115,8 +115,6 @@ def getAllocation(instrument, PROP, LEV, OPENSIZE):
 
     adjustedLEV = LEV*0.95
 
-    print('ADJUSTED ' + str(adjustedLEV))
-
 
     [marginEquity, collateralBasic, availableMargin] = getFunds()
     #loggerAPI.info(marginEquity, collateralBasic, availableMargin)
@@ -135,10 +133,10 @@ def getAllocation(instrument, PROP, LEV, OPENSIZE):
     assetAmount = usdCollateral/markPrice * int(adjustedLEV)
     loggerAPI.warning('FUND CACULATION ' + str(usdCollateral) + ' ' + str(assetAmount))
     try:
-        loggerAPI.info('Funds:  Margin ' + str(marginEquity) +  ' ColBasic ' + str(collateralBasic) +  ' availableMargin ' + str(availableMargin))
+        loggerAPI.info('Funds:  Margin ' + str(marginEquity) +  ' ColBasic ' + str(collateralBasic) +  ' availableMargin ' + str(availableMargin) + ' ADJUSTED ' + str(adjustedLEV))
     except:
         print('logger fail')
-    loggerAPI.info('Allocating for ' + instrument + ':\nCollateral $' + str(collateralBasic) +  ':\nCollateral% ' + str(usdCollateral) + '\nAmount of asset on leverage: ' + str(round(assetAmount, r)))
+    loggerAPI.info('Allocating for ' + instrument + ':\nCollateral $' + str(collateralBasic) +  ':\nCollateral% ' + str(usdCollateral) + '\nAmount of asset on leverage: ' + str(round(assetAmount, r)) + ' ADJUSTED ' + str(adjustedLEV))
 
     return round(assetAmount, r)
 
