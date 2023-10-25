@@ -113,12 +113,34 @@ def tradeStatus(instrument):
 
 def getAllocation(instrument, PROP, LEV, OPENSIZE):
 
-    adjustedLEV = LEV*0.95
 
+
+    levDict = {
+        5 : 4.5,
+        6 : 5.4,
+        7 : 6.2,
+        8 : 7.1,
+        9 : 8,
+        10 : 8.8
+    }
+
+    adjustedLEV = LEV * 0.9
+    intLev = round(LEV)
+
+    if intLev in levDict:
+        adjustedLEV = levDict[intLev]
+
+
+    # 5 = 4.6
+    # 6 = 5.5
+    # 7 = 6.3
+    # 8 = 7.2
+    # 9 = 8.03
+    # 10 = 8.8
 
     [marginEquity, collateralBasic, availableMargin] = getFunds()
     #loggerAPI.info(marginEquity, collateralBasic, availableMargin)
-    usdCollateral = round(collateralBasic * int(PROP)/100)
+    usdCollateral = round(collateralBasic * 0.98 * int(PROP)/100)
     markPrice = getTicker(instrument)
 
     r = 3
