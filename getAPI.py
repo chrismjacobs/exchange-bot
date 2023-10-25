@@ -114,6 +114,7 @@ def tradeStatus(instrument):
 def getAllocation(instrument, PROP, LEV, OPENSIZE):
 
     adjustedLEV = LEV*1
+
     print('ADJUSTED ' + str(adjustedLEV))
 
 
