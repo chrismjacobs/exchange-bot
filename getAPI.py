@@ -124,11 +124,11 @@ def getAllocation(instrument, PROP, LEV, OPENSIZE):
         10 : 8.8
     }
 
-    adjustedLEV = LEV * 0.9
-    intLev = round(LEV)
+    # adjustedLEV = LEV * 0.9
+    # intLev = round(LEV)
 
-    if intLev in levDict:
-        adjustedLEV = levDict[intLev]
+    # if intLev in levDict:
+    #     adjustedLEV = levDict[intLev]
 
 
     # 5 = 4.6
@@ -140,7 +140,7 @@ def getAllocation(instrument, PROP, LEV, OPENSIZE):
 
     [marginEquity, collateralBasic, availableMargin] = getFunds()
     #loggerAPI.info(marginEquity, collateralBasic, availableMargin)
-    usdCollateral = round(collateralBasic * 0.98 * int(PROP)/100)
+    usdCollateral = round(collateralBasic * 0.9 * int(PROP)/100)
     markPrice = getTicker(instrument)
 
     r = 3
