@@ -113,7 +113,7 @@ def tradeStatus(instrument):
 
 def getAllocation(instrument, PROP, LEV, OPENSIZE):
 
-    adjustedLEV = LEV*0.9
+    adjustedLEV = LEV*0.95
 
     [marginEquity, collateralBasic, availableMargin] = getFunds()
     #loggerAPI.info(marginEquity, collateralBasic, availableMargin)
