@@ -59,7 +59,7 @@ if REDIS_URL:
         # )
 
     print('REDIS', r)
-    print('REDIS', r.keys())
+    print('REDIS', r.keys()) 
 
     lastVersion = r.get('version')
     if not lastVersion:
@@ -73,6 +73,7 @@ if REDIS_URL:
         r.set('assets', json.dumps({}))
     if not r.get('errors'):
         r.set('errors', json.dumps({}))
+
 
 def auth_required(f):
     @wraps(f)

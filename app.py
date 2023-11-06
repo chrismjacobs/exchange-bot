@@ -83,7 +83,7 @@ def tradingview_webhook():
             addAlert('tradingview', 'TVCODE in webhook alert is incorrect')
             return 'ERROR'
         else:
-            logger.info('CODE SUCCESS')
+            logger.info('CODE SUCCESS ' + )
 
     except Exception as e:
         logger.warning('TV CODE EXCEPTION ' + str(e))
@@ -93,7 +93,7 @@ def tradingview_webhook():
     SIDE = data['SIDE']
 
 
-    logger.info(TICKER)
+    logger.info(TICKER + ' ' + SIDE)
 
     assets = json.loads(r.get('assets'))
     errors = json.loads(r.get('errors'))
