@@ -182,7 +182,7 @@ def getQty(_sym, _amt, _lev, _entry):
 
     qty = (_amt / _entry) * _lev
 
-    excess = qty%qtyStep
+    excess = qty%float(qtyStep)
 
     rQty = qty - excess
 
