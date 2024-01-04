@@ -167,13 +167,16 @@ def getQty(_sym, _amt, _lev, _entry):
         category=_cat,
         symbol=_sym,
         )
-    print(data['result'])
+    # print(data['result'])
     last_entry = float(data['result']['list'][0]['lastPrice'])
+    print(last_entry)
 
     if _entry == 0:
         _entry = last_entry
 
     qty = (_amt / _entry) * _lev
+
+    print(f'QTY: {_amt} / {_entry} / {_lev} / {qty}')
 
     return round(qty, 1)
 
