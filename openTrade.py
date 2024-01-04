@@ -167,7 +167,13 @@ def getQty(_sym, _amt, _lev, _entry):
         category=_cat,
         symbol=_sym,
         )
-    # print(data['result'])
+
+    info = session.get_instruments_info(
+        category=_cat,
+        symbol=_sym,
+    )
+    qtyStep = info['result']['list'][0]['lotSizeFilter']['qtyStep']
+
     last_entry = float(data['result']['list'][0]['lastPrice'])
     print(last_entry)
 
@@ -176,9 +182,17 @@ def getQty(_sym, _amt, _lev, _entry):
 
     qty = (_amt / _entry) * _lev
 
-    print(f'QTY: {_amt} / {_entry} / {_lev} / {qty}')
 
-    return round(qty, 1)
+
+    rQty = round(qty, 1)
+    if qtyStep == 0.001
+        rQty = round(qty, 3)
+    else qtyStep == 0.01
+        rQty = round(qty, 2)
+
+    print(f'QTY: {_amt} / {_entry} / {_lev} / {qtyStep} / {rQty}')
+
+    return rQty
 
 def placeOrder(_sym,_type, _side, _entry, _amt, _stop, _profit, _risk):
     _cat = getCat(_sym)
@@ -233,7 +247,7 @@ assDict = {
     8 : 'NEARUSDT'
 }
 
-symx = 6
+symx = 5
 _sym = assDict[symx]
 _side = 'Sell'
 _type = 'Limit'
@@ -246,6 +260,6 @@ _risk = 4
 # placeOrder(_sym,_type, _side, _entry, _amt, _stop, _profit, _risk)
 
 
-
+getQty(_sym, _amt, 3.6, 0)
 
 ## setLeverage('MATICUSDT', 'linear')
