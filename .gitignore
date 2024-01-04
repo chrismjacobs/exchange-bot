@@ -1,15 +1,12 @@
 .DS_Store
 oldpy/
-static/keys.json
 config.py
 function.py
-clientExample.py
 rPractice.py
 function.py
-exchangeAPI.py
 rPractice.py
 extrapy/
 debug.log
-
+note.txt
 
 __pycache__

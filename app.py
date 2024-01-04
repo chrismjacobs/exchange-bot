@@ -2,9 +2,10 @@ from flask import Flask, request, render_template, jsonify, abort
 import json
 import time
 from datetime import datetime
-from settings import SECRET_KEY, r, CODE, auth_required, EXCHANGE, DEBUG
+from settings import SECRET_KEY, CODE, DEBUG, auth_required
 # from exchangeAPI import apiFunds, apiTicker, apiOrder
-from getAPI import getInstruments, tradeStatus, closeOpen, openPosition, getFunds, getTicker
+from openTrade import placeOrder
+
 import logging
 # from logger.handlers import SysLogHandler
 
@@ -13,12 +14,9 @@ app.config['SECRET_KEY'] = SECRET_KEY
 app.config['DEBUG'] = DEBUG
 
 
+logging.basicConfig(level=logging.INFO, filename="log.log", filemode="w", format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
-handler = logging.StreamHandler()
-logger.addHandler(handler)
-logger.setLevel(logging.DEBUG)
 logger.warning('Test Logger App')
-
 
 @app.route('/')
 @auth_required
@@ -47,19 +45,19 @@ def addAlert(instrument, msg):
     return True
 
 
-def checkTicker(ticker):
-    logger.info('CHECK TICKER ' + ticker)
-    if 'USD' not in ticker:
-        addAlert(ticker, 'USD not found in ticker')
-        return False
+# def checkTicker(ticker):
+#     logger.info('CHECK TICKER ' + ticker)
+#     if 'USD' not in ticker:
+#         addAlert(ticker, 'USD not found in ticker')
+#         return False
 
-    asset = ticker.split('USD')[0]
-    instrument = getInstruments(asset)
-    if instrument == None:
-        addAlert(ticker, 'Asset not found on Kraken futures')
-        return False
+#     asset = ticker.split('USD')[0]
+#     instrument = getInstruments(asset)
+#     if instrument == None:
+#         addAlert(ticker, 'Asset not found on Kraken futures')
+#         return False
 
-    return instrument.upper()
+#     return instrument.upper()
 
 @app.route("/webhook", methods=['POST'])
 def tradingview_webhook():
@@ -76,250 +74,137 @@ def tradingview_webhook():
 
     try:
         ##logger.info(data['TVCODE'])
-        if not data['TVCODE']:
+        if not data['code']:
             addAlert('tradingview', 'No TVCODE found in webhook alert')
             return 'ERROR'
-        elif int(data['TVCODE']) != int(CODE):
+        elif int(data['code']) != int(CODE):
             addAlert('tradingview', 'TVCODE in webhook alert is incorrect')
             return 'ERROR'
         else:
-            logger.info('CODE SUCCESS ' + )
+            logger.info('CODE SUCCESS')
 
     except Exception as e:
         logger.warning('TV CODE EXCEPTION ' + str(e))
 
-    TICKER = data['TICKER']
-    TIME = data['TIME']
-    SIDE = data['SIDE']
+    _sym = data['asset']
+    _side = data['side']
+    _type = data['type']
+    _entry = float(data['entry'])
+    _stop = float(data['stop'])
+    _profit = float(data['profit'])
+    _amt = int(data['amt'])
+    _risk = int(data['risk'])
 
-
-    logger.info(TICKER + ' ' + SIDE)
-
-    assets = json.loads(r.get('assets'))
-    errors = json.loads(r.get('errors'))
-    logger.info('ASSETS KEYS ' + str(assets.keys()))
-
-    instrument = None
-
-    for a in assets:
-        if 'symbol' in assets[a] and assets[a]['symbol'] == TICKER:
-            instrument = a
-            break
-    else:
-        instrument = checkTicker(TICKER)
-        logger.info('ticker check ' +  instrument)
-
-        assets[instrument] = {
-            'symbol': TICKER,
-            'lev' : 2,
-            'prop' : 0,
-            'stop' : 0,
-            'webhooks' : [data],
-            'trades' : [],
-            'laststop' : 0,
-            'lastprop' : 0,
-        }
-        errors[instrument] = []
-        r.set('assets', json.dumps(assets))
-        r.set('errors', json.dumps(errors))
-        return 'Done'
-
-    if assets[instrument]['prop'] == 0:
-        addAlert(instrument, 'No allocation proportion set')
-        return 'Done'
-
-    if assets[instrument]['webhooks'][0] == data:
-        logger.info('DOUBLE WEBHOOK')
-        return 'Done'
-
-
-    assets[instrument]['webhooks'].insert(0, data)
-    if len(assets[instrument]['webhooks']) > 300:
-        assets[instrument]['webhooks'].pop()
-
-    r.set('assets', json.dumps(assets))
-
-    STOP = assets[instrument]['stop']
-    PROP = assets[instrument]['prop']
-    LEV = assets[instrument]['lev']
-    STOPID = assets[instrument]['laststop']
-    tradeResult = None
     try:
-        tradeResult = tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID)
-        #type(tradeResult) = dict
+        resp = placeOrder(_sym,_type, _side, _entry, _amt, _stop, _profit, _risk)
+        logger.infog('TRADE RESULT 1 ' + resp)
     except Exception as e:
-        logger.warning('TRADE RESULT ERROR 2 ' + str(e) )
-        #print('TRADE RESULT ERROR 2', e)
-
-    if tradeResult:
-        logger.info('TRADE RESULT ' + json.dumps(tradeResult))
-    else:
-        logger.warning('TRADE RESULT FALSE')
-    try:
-        if tradeResult != False and tradeResult != None:
-            assets = json.loads(r.get('assets'))
-            assets[instrument]['trades'].insert(0, tradeResult)
-            if len(assets[instrument]['trades']) > 300:
-                assets[instrument]['trades'].pop()
-            assets[instrument]['laststop'] = tradeResult['STOPID']
-            assets[instrument]['lastprop'] = PROP
-            r.set('assets', json.dumps(assets))
-
-    except Exception as e:
-        logger.warning('EXCEPTION ON TRADE RESULT ' + str(e))
-
-    endWebhook = 'TRADING VIEW WEBHOOK COMPLETE: ' + instrument
-    logger.info(endWebhook)
-    return endWebhook
-
-
-def tradeAsset(instrument, SIDE, STOP, PROP, LEV, STOPID):
-
-    TSlist = tradeStatus(instrument)
-    TS = TSlist[0]
-    TSsize = TSlist[2]
-    if TS == 'long' and SIDE == 'buy':
-        logger.info('NO ACTION ' + instrument)
-        return False
-
-    elif TS == 'short' and SIDE == 'sell':
-        logger.info('NO ACTION ' + instrument)
-        return False
-
-    elif TS == 'long' and SIDE == 'sell':
-        tradeData = closeOpen(instrument, STOP, PROP, LEV, STOPID, TSsize, TS)
-        if 'error' in tradeData:
-            addAlert(instrument, json.dumps(tradeData))
-            return False
-        return tradeData
-
-    elif TS == 'short' and SIDE == 'buy':
-        tradeData = closeOpen(instrument, STOP, PROP, LEV, STOPID, TSsize, TS)
-        if 'error' in tradeData:
-            addAlert(instrument, json.dumps(tradeData))
-            return False
-        return tradeData
-
-    elif TS == None:
-        tradeData = openPosition(instrument, STOP, PROP, LEV, SIDE)
-        if 'error' in tradeData:
-            addAlert(instrument, json.dumps(tradeData))
-            return False
-        return tradeData
-
-    else:
-        addAlert(instrument, 'tradeStatus: ' + TS)
-        return False
-
-
-@app.route('/getData', methods=['POST'])
-def getData():
-    pw = request.form ['pw']
-    if int(pw) != int(CODE):
-        return {'error' : 'authentication code input required'}
-
-    errors = json.loads(r.get('errors'))
-
-    if 'misc' not in errors:
-        errors['misc'] = []
-        r.set('errors', json.dumps(errors))
-
-    dataOBJ = {
-        'funds' : getFunds(),
-        'misc' : errors['misc'],
-        'exchange' : EXCHANGE
-    }
-
-
-    # if pw != PASSWORD:
-    #     return abort
-    return json.dumps(dataOBJ)
-
-
-@app.route('/getAssets', methods=['POST'])
-def getAssets():
-    pw = request.form ['pw']
-    # if int(pw) != int(CODE):
-    #     return {'error' : 'authentication code'}
-
-
-    assets = json.loads(r.get('assets'))
-    errors = json.loads(r.get('errors'))
-
-    for a in assets:
-        assets[a]['price'] = getTicker(a)
-        TSlist = tradeStatus(a)
-        logger.info('TSList ' + str(TSlist))
-        assets[a]['position'] = TSlist[0]
-        assets[a]['lastlev'] = TSlist[1]
-        assets[a]['lastsize'] = TSlist[2]
-        assets[a]['errors'] = errors[a]
-
-    return json.dumps(assets)
-
-
-@app.route('/setAsset', methods=['POST'])
-def setAsset():
-    pw = request.form ['pw']
-    if int(pw) != int(CODE):
-        return {'error' : 'authentication error'}
-
-    asset = request.form['asset']
-    stop = request.form['stop']
-    lev = request.form['lev']
-    prop = request.form['prop']
-
-    assets = json.loads(r.get('assets'))
-    assets[asset]['stop'] = float(stop)
-    assets[asset]['lev'] = float(lev)
-    assets[asset]['prop'] = float(prop)
-
-    r.set('assets', json.dumps(assets))
-
-    return {'success' : 'assets updated'}
-
-@app.route('/deleteAsset', methods=['POST'])
-def deleteAsset():
-    pw = request.form ['pw']
-    if int(pw) != int(CODE):
-        return {'error' : 'authentication error'}
-
-    asset = request.form['asset']
-
-    assets = json.loads(r.get('assets'))
-
-    removedAsset = assets.pop(asset, asset +' not found')
-
-    msg = "Removed Asset: " + asset
-    logger.info(msg)
-
-    r.set('assets', json.dumps(assets))
-
-    return {'success' : msg}
-
-@app.route('/deleteMisc', methods=['POST'])
-def deleteMisc():
-    pw = request.form ['pw']
-    if int(pw) != int(CODE):
-        return {'error' : 'authentication error'}
+        logger.warning('TRADE RESULT ERROR 1 ' + str(e) )
 
 
 
-    errors = json.loads(r.get('errors'))
-    errors['misc'] = []
+# @app.route('/getData', methods=['POST'])
+# def getData():
+#     pw = request.form ['pw']
+#     if int(pw) != int(CODE):
+#         return {'error' : 'authentication code input required'}
 
-    msg = "Removed Misc Errors"
-    logger.info(msg)
+#     errors = json.loads(r.get('errors'))
 
-    r.set('errors', json.dumps(errors))
+#     if 'misc' not in errors:
+#         errors['misc'] = []
+#         r.set('errors', json.dumps(errors))
 
-    return {'success' : msg}
+#     dataOBJ = {
+#         'funds' : getFunds(),
+#         'misc' : errors['misc'],
+#         'exchange' : EXCHANGE
+#     }
+
+
+#     # if pw != PASSWORD:
+#     #     return abort
+#     return json.dumps(dataOBJ)
+
+
+# @app.route('/getAssets', methods=['POST'])
+# def getAssets():
+#     pw = request.form ['pw']
+#     # if int(pw) != int(CODE):
+#     #     return {'error' : 'authentication code'}
+
+
+#     assets = json.loads(r.get('assets'))
+#     errors = json.loads(r.get('errors'))
+
+#     for a in assets:
+#         assets[a]['price'] = getTicker(a)
+#         TSlist = tradeStatus(a)
+#         logger.info('TSList ' + str(TSlist))
+#         assets[a]['position'] = TSlist[0]
+#         assets[a]['lastlev'] = TSlist[1]
+#         assets[a]['lastsize'] = TSlist[2]
+#         assets[a]['errors'] = errors[a]
+
+#     return json.dumps(assets)
+
+
+# @app.route('/setAsset', methods=['POST'])
+# def setAsset():
+#     pw = request.form ['pw']
+#     if int(pw) != int(CODE):
+#         return {'error' : 'authentication error'}
+
+#     asset = request.form['asset']
+#     stop = request.form['stop']
+#     lev = request.form['lev']
+#     prop = request.form['prop']
+
+#     assets = json.loads(r.get('assets'))
+#     assets[asset]['stop'] = float(stop)
+#     assets[asset]['lev'] = float(lev)
+#     assets[asset]['prop'] = float(prop)
+
+#     r.set('assets', json.dumps(assets))
+
+#     return {'success' : 'assets updated'}
+
+# @app.route('/deleteAsset', methods=['POST'])
+# def deleteAsset():
+#     pw = request.form ['pw']
+#     if int(pw) != int(CODE):
+#         return {'error' : 'authentication error'}
+
+#     asset = request.form['asset']
+
+#     assets = json.loads(r.get('assets'))
+
+#     removedAsset = assets.pop(asset, asset +' not found')
+
+#     msg = "Removed Asset: " + asset
+#     logger.info(msg)
+
+#     r.set('assets', json.dumps(assets))
+
+#     return {'success' : msg}
+
+# @app.route('/deleteMisc', methods=['POST'])
+# def deleteMisc():
+#     pw = request.form ['pw']
+#     if int(pw) != int(CODE):
+#         return {'error' : 'authentication error'}
 
 
 
+#     errors = json.loads(r.get('errors'))
+#     errors['misc'] = []
 
+#     msg = "Removed Misc Errors"
+#     logger.info(msg)
 
+#     r.set('errors', json.dumps(errors))
 
+#     return {'success' : msg}
 
 
 if __name__ == '__main__':
