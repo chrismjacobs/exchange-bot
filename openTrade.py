@@ -182,13 +182,9 @@ def getQty(_sym, _amt, _lev, _entry):
 
     qty = (_amt / _entry) * _lev
 
+    excess = qty%qtyStep
 
-
-    rQty = round(qty, 1)
-    if float(qtyStep) == 0.001:
-        rQty = round(qty, 3)
-    elif float(qtyStep) == 0.01:
-        rQty = round(qty, 2)
+    rQty = qty - excess
 
     print(f'QTY: {_amt} / {_entry} / {_lev} / {qtyStep} / {rQty}')
 
@@ -198,14 +194,14 @@ def placeOrder(_sym,_type, _side, _entry, _amt, _stop, _profit, _risk):
     _cat = getCat(_sym)
 
     if not checkValid(_sym):
-        return False
+        return 'Check Valid Fail'
 
     _lev = setLeverage(_sym, _entry, _stop, _risk)
 
     if _lev:
         _qty = getQty(_sym, _amt, _lev, _entry)
     else:
-        return False
+        return 'Set Lev Fail'
 
     _pidx = 1
     if _side == 'Sell':
