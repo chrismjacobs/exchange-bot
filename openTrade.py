@@ -203,9 +203,9 @@ def placeOrder(_sym,_type, _side, _entry, _amt, _stop, _profit, _risk):
     else:
         return 'Set Lev Fail'
 
-    _pidx = 1
-    if _side == 'Sell':
-        _pidx = 2
+    _pidx = 0
+    # if _side == 'Sell':
+    #     _pidx = 2
 
     try:
 
