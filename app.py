@@ -14,7 +14,7 @@ app.config['SECRET_KEY'] = SECRET_KEY
 app.config['DEBUG'] = DEBUG
 
 
-##logging.basicConfig(level=logging.INFO, filename="log.log", filemode="w", format="%(asctime)s - %(levelname)s - %(message)s")
+##logging.basicConfig(level=logging.warning, filename="log.log", filemode="w", format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 logger.warning('Test Logger App')
 
@@ -46,7 +46,7 @@ def addAlert(instrument, msg):
 
 
 # def checkTicker(ticker):
-#     logger.info('CHECK TICKER ' + ticker)
+#     logger.warning('CHECK TICKER ' + ticker)
 #     if 'USD' not in ticker:
 #         addAlert(ticker, 'USD not found in ticker')
 #         return False
@@ -70,10 +70,10 @@ def tradingview_webhook():
         logger.warning('DATA LOAD EXCEPTION ' + str(e))
         addAlert('tradingview', 'Invalid json data')
         return 'ERROR'
-    logger.info('TV DATA' +  json.dumps(data))
+    logger.warning('TV DATA' +  json.dumps(data))
 
     try:
-        ##logger.info(data['TVCODE'])
+        ##logger.warning(data['TVCODE'])
         if not data['code']:
             addAlert('tradingview', 'No TVCODE found in webhook alert')
             return 'ERROR'
@@ -81,7 +81,7 @@ def tradingview_webhook():
             addAlert('tradingview', 'TVCODE in webhook alert is incorrect')
             return 'ERROR'
         else:
-            logger.info('CODE SUCCESS')
+            logger.warning('CODE SUCCESS')
 
     except Exception as e:
         logger.warning('TV CODE EXCEPTION ' + str(e))
@@ -97,7 +97,7 @@ def tradingview_webhook():
 
     try:
         resp = placeOrder(_sym,_type, _side, _entry, _amt, _stop, _profit, _risk)
-        logger.info('TRADE RESULT 1 ' + resp)
+        logger.warning('TRADE RESULT 1 ' + resp)
     except Exception as e:
         logger.warning('TRADE RESULT ERROR 1 ' + str(e) )
 
@@ -141,7 +141,7 @@ def tradingview_webhook():
 #     for a in assets:
 #         assets[a]['price'] = getTicker(a)
 #         TSlist = tradeStatus(a)
-#         logger.info('TSList ' + str(TSlist))
+#         logger.warning('TSList ' + str(TSlist))
 #         assets[a]['position'] = TSlist[0]
 #         assets[a]['lastlev'] = TSlist[1]
 #         assets[a]['lastsize'] = TSlist[2]
@@ -183,7 +183,7 @@ def tradingview_webhook():
 #     removedAsset = assets.pop(asset, asset +' not found')
 
 #     msg = "Removed Asset: " + asset
-#     logger.info(msg)
+#     logger.warning(msg)
 
 #     r.set('assets', json.dumps(assets))
 
@@ -201,7 +201,7 @@ def tradingview_webhook():
 #     errors['misc'] = []
 
 #     msg = "Removed Misc Errors"
-#     logger.info(msg)
+#     logger.warning(msg)
 
 #     r.set('errors', json.dumps(errors))
 
