@@ -97,10 +97,11 @@ def tradingview_webhook():
 
     try:
         resp = placeOrder(_sym,_type, _side, _entry, _amt, _stop, _profit, _risk)
-        logger.infog('TRADE RESULT 1 ' + resp)
+        logger.info('TRADE RESULT 1 ' + resp)
     except Exception as e:
         logger.warning('TRADE RESULT ERROR 1 ' + str(e) )
 
+    return 'TV WEBHOOK COMPLETE'
 
 
 # @app.route('/getData', methods=['POST'])
