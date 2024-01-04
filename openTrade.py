@@ -185,9 +185,9 @@ def getQty(_sym, _amt, _lev, _entry):
 
 
     rQty = round(qty, 1)
-    if qtyStep == 0.001
+    if float(qtyStep) == 0.001:
         rQty = round(qty, 3)
-    else qtyStep == 0.01
+    elif float(qtyStep) == 0.01:
         rQty = round(qty, 2)
 
     print(f'QTY: {_amt} / {_entry} / {_lev} / {qtyStep} / {rQty}')
