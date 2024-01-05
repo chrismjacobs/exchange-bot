@@ -13,6 +13,8 @@ try:
     USER = config.USER
     PASSWORD = config.PASSWORD
     CODE = config.CODE
+    TG_TOKEN = config.TG_TOKEN
+    TG_CHAT = config.TG_CHAT
     LOCAL = True
     DEBUG = True
     print('CONFIG SUCCESS')
@@ -24,6 +26,8 @@ except:
     API_KEY = os.environ['API_KEY']
     API_SECRET = os.environ['API_SECRET']
     CODE = os.environ['CODE']
+    TG_TOKEN = os.environ['TG_TOKEN']
+    TG_CHAT = os.environ['TG_CHAT']
     DEBUG = False
 
 
