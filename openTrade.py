@@ -193,8 +193,12 @@ def getQty(_sym, _amt, _lev, _entry):
 def placeOrder(_sym,_type, _side, _entry, _amt, _stop, _profit, _risk):
     _cat = getCat(_sym)
 
+    print('CHECK VALID')
+
     if not checkValid(_sym):
         return 'Check Valid Fail'
+
+    print('SET LEV')
 
     _lev = setLeverage(_sym, _entry, _stop, _risk)
 
@@ -208,16 +212,17 @@ def placeOrder(_sym,_type, _side, _entry, _amt, _stop, _profit, _risk):
     #     _pidx = 2
 
     try:
+        print('TRY ORDER', _lev, _qty)
 
         response = session.place_order(
                 category=_cat,
                 symbol=_sym,
                 side=_side,
                 orderType=_type,
-                qty=_qty,
-                price=_entry,
-                stopLoss=_stop,
-                takeProfit=_profit,
+                qty=str(_qty),
+                price=str(_entry),
+                stopLoss=str(_stop),
+                takeProfit=str(_profit),
                 positionIdx=_pidx
             )
 
