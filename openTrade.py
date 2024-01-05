@@ -1,4 +1,4 @@
-from settings import API_KEY, API_SECRET
+from settings import API_KEY, API_SECRET, LOCAL
 
 from pybit.unified_trading import HTTP
 
@@ -57,7 +57,9 @@ def getPosition(_sym):
         'time' : data['updatedTime']
         }
 
-    if int(dataDict['value']) == 0:
+    # print(dataDict)
+
+    if dataDict['value'] == '' or int(dataDict['value']) == 0:
         print(f'No positions on {_sym}')
         return False
 
@@ -258,9 +260,22 @@ _profit = 2381
 _amt = 100
 _risk = 4
 
-# placeOrder(_sym,_type, _side, _entry, _amt, _stop, _profit, _risk)
+
+data = {"code":"324","side":"Sell","entry":"0.001734","stop":"0.001791","profit":"0.001677","risk":"10","amt":"100","type":"Limit","asset":"REEFUSDT"}
+
+_sym = data['asset']
+_side = data['side']
+_type = data['type']
+_entry = float(data['entry'])
+_stop = float(data['stop'])
+_profit = float(data['profit'])
+_amt = int(data['amt'])
+_risk = int(data['risk'])
+
+# if LOCAL
+#     placeOrder(_sym,_type, _side, _entry, _amt, _stop, _profit, _risk)
 
 
-getQty(_sym, _amt, 3.6, 0)
+# getQty(_sym, _amt, 3.6, 0)
 
 ## setLeverage('MATICUSDT', 'linear')

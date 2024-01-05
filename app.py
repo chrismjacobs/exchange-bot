@@ -1,8 +1,9 @@
 from flask import Flask, request, render_template, jsonify, abort
 import json
 import time
+import requests
 from datetime import datetime
-from settings import SECRET_KEY, CODE, DEBUG, auth_required
+from settings import SECRET_KEY, CODE, DEBUG, auth_required, TG_TOKEN, TG_CHAT
 # from exchangeAPI import apiFunds, apiTicker, apiOrder
 from openTrade import placeOrder
 
@@ -59,6 +60,12 @@ def addAlert(instrument, msg):
 
 #     return instrument.upper()
 
+def sendMessage(m):
+    url_string = 'https://api.telegram.org/bot' + TG_TOKEN + '/sendMessage?chat_id=' + str(TG_CHAT)
+    base_url = url_string + '&text="{}"'.format(m)
+    print(base_url)
+    requests.get(base_url)
+
 @app.route("/webhook", methods=['POST'])
 def tradingview_webhook():
 
@@ -97,9 +104,13 @@ def tradingview_webhook():
 
     try:
         resp = placeOrder(_sym,_type, _side, _entry, _amt, _stop, _profit, _risk)
-        logger.warning('TRADE RESULT 1 ' + resp)
+        m = 'TRADE RESULT 1 ' + resp
+        logger.warning(m)
+        sendMessage(m)
     except Exception as e:
-        logger.warning('TRADE RESULT ERROR 1 ' + str(e) )
+        m = 'TRADE RESULT ERROR 1 ' + str(e)
+        logger.warning(m)
+        sendMessage(m)
 
     return 'TV WEBHOOK COMPLETE'
 
