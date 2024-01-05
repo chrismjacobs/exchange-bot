@@ -131,7 +131,7 @@ def setLeverage(_sym, _entry, _stop, _risk):
     per = (diff/_entry)*100
 
     _lev = round(_risk/per, 1)
-    if _lev > 10:
+    if _lev > 20:
         print(f'set lev on {_sym} at {_lev} : Lev too high')
         return False
 
