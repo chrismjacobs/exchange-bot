@@ -104,7 +104,7 @@ def tradingview_webhook():
 
     try:
         resp = placeOrder(_sym,_type, _side, _entry, _amt, _stop, _profit, _risk)
-        m = 'TRADE RESULT 1 ' + resp
+        m = 'TRADE RESULT 1 ' + json.dumps(resp)
         logger.warning(m)
         sendMessage(m)
     except Exception as e:
