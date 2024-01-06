@@ -234,7 +234,7 @@ def placeOrder(_sym,_type, _side, _entry, _amt, _stop, _profit, _risk):
                 symbol=_sym,
                 side=_side,
                 orderType=_type,
-                qty=str(_qty),
+                qty=str(round(_qty, 2)),
                 price=str(_entry),
                 stopLoss=str(_stop),
                 takeProfit=str(_profit),
