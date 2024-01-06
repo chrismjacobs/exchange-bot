@@ -8,6 +8,17 @@ session = HTTP(
     api_secret=API_SECRET,
 )
 
+def getFunds():
+    response = session.get_wallet_balance(
+        accountType="UNIFIED",
+        coin="USDT",
+    )
+    totalEquity = response['result']['list'][0]['totalEquity']
+    print(totalEquity)
+    return totalEquity
+
+
+
 def getCat(_sym):
     _cat = 'inverse'
     if 'USDT' in _sym:
@@ -184,7 +195,9 @@ def getQty(_sym, _amt, _lev, _entry):
 
     qty = (_amt / _entry) * _lev
 
-    excess = qty%float(qtyStep)
+    checkQty = round(qty * 10000)/10000
+
+    excess = checkQty%float(qtyStep)
 
     rQty = qty - excess
 
